@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install
 COPY . .
 RUN npm run build
 
@@ -24,9 +24,9 @@ RUN npm run build
 FROM node:22-alpine AS runtime
 WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
-COPY --from=build --chown=app:app /app/dist ./dist
-COPY --from=build --chown=app:app /app/node_modules ./node_modules
-COPY --from=build --chown=app:app /app/package.json ./
+COPY --from=build --chown=app:app /app/.next/standalone ./
+COPY --from=build --chown=app:app /app/.next/static ./.next/static
+COPY --from=build --chown=app:app /app/public ./public
 USER app
 EXPOSE 3000
 CMD ["node", "server.js"]
@@ -59,9 +59,9 @@ CMD ["node", "server.js"]
 FROM registry.access.redhat.com/ubi9/nodejs-22-minimal AS runtime-fips
 WORKDIR /app
 RUN useradd -u 1001 -r -g 0 -s /sbin/nologin app
-COPY --from=build --chown=app:app /app/dist ./dist
-COPY --from=build --chown=app:app /app/node_modules ./node_modules
-COPY --from=build --chown=app:app /app/package.json ./
+COPY --from=build --chown=app:app /app/.next/standalone ./
+COPY --from=build --chown=app:app /app/.next/static ./.next/static
+COPY --from=build --chown=app:app /app/public ./public
 USER 1001
 EXPOSE 3000
 CMD ["node", "server.js"]

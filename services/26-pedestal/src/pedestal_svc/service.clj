@@ -1,4 +1,4 @@
-(ns 26_pedestal.service
+(ns pedestal-svc.service
   (:require [io.pedestal.http :as http]
             [io.pedestal.http.route :as route]
             [cheshire.core :as json])

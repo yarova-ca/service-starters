@@ -9,8 +9,8 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
-RUN apt-get update && apt-get install -y --no-install-recommends maven openjdk-21-jdk \
+FROM eclipse-temurin:25-jdk-noble AS build
+RUN apt-get update && apt-get install -y --no-install-recommends maven \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY pom.xml ./

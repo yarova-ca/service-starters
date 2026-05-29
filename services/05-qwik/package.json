@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "qwik build",
+    "build.client": "vite build",
+    "build.server": "vite build --ssr src/entry.express.tsx",
+    "build": "npm run build.client && npm run build.server",
     "dev": "vite --port 3000",
     "start": "node server/entry.express.js",
     "test": "vitest run"
   },
   "dependencies": {
-    "@builder.io/qwik": "^2.0.0",
-    "@builder.io/qwik-city": "^2.0.0",
+    "@builder.io/qwik": "^1.9.0",
+    "@builder.io/qwik-city": "^1.9.0",
     "express": "^5.0.0",
     "dotenv": "^16.4.5"
   },

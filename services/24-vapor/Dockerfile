@@ -9,16 +9,9 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
-RUN apt-get update && apt-get install -y --no-install-recommends wget clang libicu-dev libssl-dev \
- && wget -q https://download.swift.org/swift-6.0.3-release/ubuntu2404/swift-6.0.3-RELEASE/swift-6.0.3-RELEASE-ubuntu24.04.tar.gz \
- && tar -xzf swift-6.0.3-RELEASE-ubuntu24.04.tar.gz -C /usr \
- && mv /usr/swift-6.0.3-RELEASE-ubuntu24.04 /usr/swift \
- && rm swift-6.0.3-RELEASE-ubuntu24.04.tar.gz \
- && rm -rf /var/lib/apt/lists/*
-ENV PATH="/usr/swift/usr/bin:$PATH" 
+FROM swift:6.0.3 AS build
 WORKDIR /app
-COPY Package.swift Package.resolved ./
+COPY Package.swift ./
 RUN swift package resolve
 COPY Sources ./Sources
 COPY Tests ./Tests

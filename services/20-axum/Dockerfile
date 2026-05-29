@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl build-esse
  && rm -rf /var/lib/apt/lists/*
 ENV PATH="/root/.cargo/bin:$PATH" 
 WORKDIR /app
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 RUN mkdir src && echo "fn main(){}" > src/main.rs && cargo build --release --target x86_64-unknown-linux-musl && rm src/main.rs
 COPY src ./src
 RUN cargo build --release --target x86_64-unknown-linux-musl
@@ -26,7 +26,7 @@ RUN cargo build --release --target x86_64-unknown-linux-musl
 # ── Runtime stage (standard — scratch) ────────────────────────────────────
 FROM scratch AS runtime
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /app/target/x86_64-unknown-linux-musl/release/20-axum /app
+COPY --from=build /app/target/x86_64-unknown-linux-musl/release/app /app
 USER 65534:65534
 EXPOSE 8080
 ENTRYPOINT ["/app"]
@@ -38,7 +38,7 @@ ENTRYPOINT ["/app"]
 # Option: gcr.io/distroless/static-debian12 — when TLS certs or timezone data needed at runtime
 #FROM gcr.io/distroless/static-debian12 AS runtime
 #COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-#COPY --from=build /app/target/x86_64-unknown-linux-musl/release/20-axum /app
+#COPY --from=build /app/target/x86_64-unknown-linux-musl/release/app /app
 #USER 65534:65534
 #EXPOSE 8080
 #ENTRYPOINT ["/app"]
@@ -46,14 +46,14 @@ ENTRYPOINT ["/app"]
 # Option: alpine:3.21 — shell available for debugging; apk available for runtime deps
 #FROM alpine:3.21 AS runtime
 #RUN apk add --no-cache ca-certificates tzdata && adduser -D -u 65534 nobody
-#COPY --from=build /app/target/x86_64-unknown-linux-musl/release/20-axum /app
+#COPY --from=build /app/target/x86_64-unknown-linux-musl/release/app /app
 #USER 65534:65534
 #EXPOSE 8080
 #ENTRYPOINT ["/app"]
 
 # ── Runtime — FIPS (ubi-micro) ────────────────────────────────────────────
 FROM registry.access.redhat.com/ubi9/ubi-micro AS runtime-fips
-COPY --from=build /app/target/x86_64-unknown-linux-musl/release/20-axum /usr/local/bin/app
+COPY --from=build /app/target/x86_64-unknown-linux-musl/release/app /usr/local/bin/app
 USER 1001
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/app"]

@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'path'
 import bootstrap from './app/app.config.server'
 
 const app = express()
-const PORT = process.env.PORT || 4000
+const PORT = process.env['PORT'] || 4000
 const serverDistFolder = dirname(fileURLToPath(import.meta.url))
 const browserDistFolder = resolve(serverDistFolder, '../browser')
 

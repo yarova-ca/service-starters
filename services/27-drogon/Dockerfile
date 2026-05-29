@@ -10,14 +10,18 @@
 
 # ── Build stage ───────────────────────────────────────────────────────────
 FROM ubuntu:24.04 AS build
-RUN apt-get update && apt-get install -y --no-install-recommends cmake clang libssl-dev zlib1g-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake make clang libssl-dev zlib1g-dev \
     libjsoncpp-dev uuid-dev libpq-dev libbrotli-dev \
+    libdrogon-dev libsqlite3-dev default-libmysqlclient-dev \
+    libhiredis-dev libyaml-cpp-dev libboost-dev libtrantor-dev \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY CMakeLists.txt ./
-COPY src ./src
-COPY include ./include
+COPY CMakeLists.txt main.cc ./
 RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ \
+    -DMYSQL_INCLUDE_DIR=/usr/include/mysql \
+    -DMYSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libmysqlclient.so \
+    -DCMAKE_POLICY_DEFAULT_CMP0153=OLD \
  && cmake --build build --parallel $(nproc)
 # REPLACE: binary name 'app' below with your CMake target name
 

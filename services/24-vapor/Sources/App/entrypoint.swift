@@ -7,6 +7,6 @@ struct AppEntrypoint {
         try LoggingSystem.bootstrap(from: &env)
         let app = try await Application.make(env)
         try configure(app)
-        try await app.runFromAsyncMainEntrypoint()
+        try await app.execute()
     }
 }

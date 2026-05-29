@@ -9,13 +9,14 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
-RUN apt-get update && apt-get install -y --no-install-recommends ruby ruby-dev build-essential \
+FROM ruby:3.3 AS build
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY Gemfile Gemfile.lock ./
-RUN bundle config set without 'development test' \
- && bundle install --path vendor/bundle
+COPY Gemfile ./
+RUN bundle config set --local path 'vendor/bundle' \
+ && bundle config set --local without 'development test' \
+ && bundle install
 COPY . .
 
 # ── Runtime stage (standard) ──────────────────────────────────────────────

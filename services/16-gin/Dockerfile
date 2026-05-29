@@ -17,9 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certifi
  && rm -rf /var/lib/apt/lists/*
 ENV PATH="/usr/local/go/bin:$PATH" CGO_ENABLED=0 GOOS=linux
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
+COPY go.mod ./
+RUN GOFLAGS="-mod=mod" go mod download
 COPY . .
+RUN go mod tidy
 RUN go build -a -installsuffix cgo -ldflags="-s -w" -o /app/bin/app ./...
 
 # ── Runtime stage (standard — scratch, zero attack surface) ───────────────

@@ -1,6 +1,8 @@
-const { ModuleFederationPlugin } = require('@module-federation/enhanced')
+const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const path = require('path')
+
+const { ModuleFederationPlugin } = webpack.container
 
 module.exports = {
   entry: './src/index.ts',
@@ -9,9 +11,10 @@ module.exports = {
   module: { rules: [{ test: /\.tsx?$/, use: 'ts-loader', exclude: /node_modules/ }] },
   plugins: [
     new ModuleFederationPlugin({
-      name: '08_mf_rspack',
+      name: 'mfRspack',
       filename: 'remoteEntry.js',
       exposes: { './App': './src/App' },
+      shared: { react: { singleton: true }, 'react-dom': { singleton: true } },
     }),
     new HtmlWebpackPlugin({ template: './index.html' }),
   ],

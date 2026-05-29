@@ -9,21 +9,18 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
-RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk \
- && rm -rf /var/lib/apt/lists/*
+FROM gradle:8.11.1-jdk21-alpine AS build
 WORKDIR /app
-COPY build.gradle.kts settings.gradle.kts gradlew ./
-COPY gradle ./gradle
-RUN ./gradlew dependencies -q
+COPY build.gradle.kts settings.gradle.kts ./
+RUN gradle dependencies -q --no-daemon
 COPY src ./src
-RUN ./gradlew shadowJar -q
+RUN gradle bootJar -q --no-daemon
 # REPLACE: use bootJar for Spring Boot Kotlin; shadowJar for Ktor
 
 # ── Runtime stage (standard — distroless) ─────────────────────────────────
 FROM gcr.io/distroless/java21-debian12 AS runtime
 WORKDIR /app
-COPY --from=build /app/build/libs/*-all.jar app.jar
+COPY --from=build /app/build/libs/app.jar app.jar
 USER 65534:65534
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
@@ -36,7 +33,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 #FROM eclipse-temurin:21-jre-alpine AS runtime
 #WORKDIR /app
 #RUN adduser -D -u 1001 app
-#COPY --from=build /app/build/libs/*-all.jar app.jar
+#COPY --from=build /app/build/libs/app.jar app.jar
 #USER 1001
 #EXPOSE 8080
 #ENTRYPOINT ["java", "-jar", "/app/app.jar"]
@@ -45,7 +42,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 #FROM amazoncorretto:21-al2023-jdk AS runtime
 #WORKDIR /app
 #RUN useradd -u 1001 -r app
-#COPY --from=build /app/build/libs/*-all.jar app.jar
+#COPY --from=build /app/build/libs/app.jar app.jar
 #USER 1001
 #EXPOSE 8080
 #ENTRYPOINT ["java", "-jar", "/app/app.jar"]
@@ -53,7 +50,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 # ── Runtime — FIPS (OpenJDK 21 on UBI9) ──────────────────────────────────
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime AS runtime-fips
 WORKDIR /deployments
-COPY --from=build /app/build/libs/*-all.jar /deployments/app.jar
+COPY --from=build /app/build/libs/app.jar /deployments/app.jar
 USER 1001
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/deployments/app.jar"]
