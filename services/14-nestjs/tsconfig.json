@@ -12,6 +12,10 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": [
+      "jest",
+      "node"
+    ]
   }
 }

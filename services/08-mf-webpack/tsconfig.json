@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "outDir": "./dist",
+    "lib": ["ES2017", "DOM"]
+  },
+  "include": ["src/**/*"]
+}

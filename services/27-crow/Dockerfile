@@ -10,13 +10,13 @@
 
 # ── Build stage ───────────────────────────────────────────────────────────
 FROM ubuntu:24.04 AS build
-RUN apt-get update && apt-get install -y --no-install-recommends cmake clang libssl-dev zlib1g-dev \
-    libjsoncpp-dev uuid-dev libpq-dev libbrotli-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates cmake make clang git libssl-dev zlib1g-dev \
+    libasio-dev libjsoncpp-dev uuid-dev libpq-dev libbrotli-dev libgtest-dev \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY CMakeLists.txt ./
-COPY src ./src
-COPY include ./include
+COPY CMakeLists.txt main.cc ./
+COPY tests/ tests/
 RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ \
  && cmake --build build --parallel $(nproc)
 # REPLACE: binary name 'app' below with your CMake target name

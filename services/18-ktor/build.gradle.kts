@@ -1,7 +1,11 @@
 plugins {
-    kotlin("jvm") version "2.1.0"
-    id("io.ktor.plugin") version "3.5.0"
+    kotlin("jvm") version "1.9.25"
+    id("io.ktor.plugin") version "2.3.12"
     application
+}
+
+repositories {
+    mavenCentral()
 }
 
 application {

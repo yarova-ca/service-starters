@@ -9,15 +9,12 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
-RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk \
- && rm -rf /var/lib/apt/lists/*
+FROM gradle:8.11.1-jdk21-alpine AS build
 WORKDIR /app
-COPY build.gradle.kts settings.gradle.kts gradlew ./
-COPY gradle ./gradle
-RUN ./gradlew dependencies -q
+COPY build.gradle.kts settings.gradle.kts ./
+RUN gradle dependencies -q --no-daemon
 COPY src ./src
-RUN ./gradlew shadowJar -q
+RUN gradle buildFatJar -q --no-daemon
 # REPLACE: use bootJar for Spring Boot Kotlin; shadowJar for Ktor
 
 # ── Runtime stage (standard — distroless) ─────────────────────────────────

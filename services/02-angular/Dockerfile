@@ -16,13 +16,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 COPY . .
 RUN npm run build
 
 # ── Runtime stage (standard — nginx serves static assets) ─────────────────
 FROM nginx:alpine AS runtime
-COPY --from=build /app/dist/browser /usr/share/nginx/html
+COPY --from=build /app/dist/app /usr/share/nginx/html
 # Optional: COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
@@ -33,13 +33,13 @@ CMD ["nginx", "-g", "daemon off;"]
 
 # Option: nginx:1.27-stable-alpine3.21-slim — pinned stable slim tag (more predictable than :alpine)
 #FROM nginx:1.27-stable-alpine3.21-slim AS runtime
-#COPY --from=build /app/dist/browser /usr/share/nginx/html
+#COPY --from=build /app/dist/app /usr/share/nginx/html
 #EXPOSE 80
 #CMD ["nginx", "-g", "daemon off;"]
 
 # Option: cgr.dev/chainguard/nginx:latest — hardened nginx, sigstore-verified, rootless by default
 #FROM cgr.dev/chainguard/nginx:latest AS runtime
-#COPY --from=build /app/dist/browser /usr/share/nginx/html
+#COPY --from=build /app/dist/app /usr/share/nginx/html
 #EXPOSE 80
 
 # Option: caddy:2-alpine — replaces nginx entirely; HTTPS auto-provisioning, simpler config
@@ -51,6 +51,6 @@ CMD ["nginx", "-g", "daemon off;"]
 
 # ── Runtime — FIPS ────────────────────────────────────────────────────────
 FROM registry.access.redhat.com/ubi9/nginx-122 AS runtime-fips
-COPY --from=build /app/dist/browser /usr/share/nginx/html
+COPY --from=build /app/dist/app /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

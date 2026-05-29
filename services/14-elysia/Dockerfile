@@ -9,13 +9,10 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
-RUN apt-get update && apt-get install -y --no-install-recommends curl unzip ca-certificates \
- && curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash \
- && rm -rf /var/lib/apt/lists/*
+FROM oven/bun:1-alpine AS build
 WORKDIR /app
-COPY bun.lockb package.json ./
-RUN bun install --frozen-lockfile
+COPY package.json ./
+RUN bun install
 COPY . .
 RUN bun build src/index.ts --target bun --outfile dist/index.js
 

@@ -5,7 +5,7 @@
   <artifactId>17-quarkus</artifactId>
   <version>1.0.0</version>
   <properties>
-    <quarkus.platform.version>3.35.0</quarkus.platform.version>
+    <quarkus.platform.version>3.15.1</quarkus.platform.version>
     <maven.compiler.release>21</maven.compiler.release>
     <quarkus.http.port>8080</quarkus.http.port>
   </properties>
@@ -26,4 +26,32 @@
     <dependency><groupId>io.quarkus</groupId><artifactId>quarkus-junit5</artifactId><scope>test</scope></dependency>
     <dependency><groupId>io.rest-assured</groupId><artifactId>rest-assured</artifactId><scope>test</scope></dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.quarkus.platform</groupId>
+        <artifactId>quarkus-maven-plugin</artifactId>
+        <version>${quarkus.platform.version}</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <goals>
+              <goal>build</goal>
+              <goal>generate-code</goal>
+              <goal>generate-code-tests</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <parameters>true</parameters>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

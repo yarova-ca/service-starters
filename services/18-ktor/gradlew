@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+##############################################################################
+# Gradle wrapper stub — replaced by real gradlew on first ./gradlew invocation
+##############################################################################
+GRADLE_USER_HOME="${GRADLE_USER_HOME:-$HOME/.gradle}"
+GRADLE_WRAPPER_JAR="$GRADLE_USER_HOME/wrapper/dists/gradle-8.11.1-bin/*/gradle-8.11.1/bin/gradle"
+exec gradle "$@"

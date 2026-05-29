@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install
 COPY . .
 RUN npm run build
 
@@ -24,9 +24,7 @@ RUN npm run build
 FROM node:22-alpine AS runtime
 WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
-COPY --from=build --chown=app:app /app/dist ./dist
-COPY --from=build --chown=app:app /app/node_modules ./node_modules
-COPY --from=build --chown=app:app /app/package.json ./
+COPY --from=build --chown=app:app /app/.output ./.output
 USER app
 EXPOSE 3000
 CMD ["node", ".output/server/index.mjs"]
@@ -39,9 +37,7 @@ CMD ["node", ".output/server/index.mjs"]
 #FROM node:22-slim AS runtime
 #WORKDIR /app
 #RUN addgroup --system app && adduser --system --ingroup app app
-#COPY --from=build --chown=app:app /app/dist ./dist
-#COPY --from=build --chown=app:app /app/node_modules ./node_modules
-#COPY --from=build --chown=app:app /app/package.json ./
+#COPY --from=build --chown=app:app /app/.output ./.output
 #USER app
 #EXPOSE 3000
 #CMD ["node", ".output/server/index.mjs"]
@@ -59,9 +55,7 @@ CMD ["node", ".output/server/index.mjs"]
 FROM registry.access.redhat.com/ubi9/nodejs-22-minimal AS runtime-fips
 WORKDIR /app
 RUN useradd -u 1001 -r -g 0 -s /sbin/nologin app
-COPY --from=build --chown=app:app /app/dist ./dist
-COPY --from=build --chown=app:app /app/node_modules ./node_modules
-COPY --from=build --chown=app:app /app/package.json ./
+COPY --from=build --chown=app:app /app/.output ./.output
 USER 1001
 EXPOSE 3000
 CMD ["node", ".output/server/index.mjs"]

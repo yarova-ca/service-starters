@@ -1,7 +1,6 @@
-(ns 26_ring.core
+(ns ring-app.core
   (:require [ring.adapter.jetty :as jetty]
             [compojure.core :refer [defroutes GET]]
-            [ring.middleware.json :refer [wrap-json-response]]
             [cheshire.core :as json])
   (:gen-class))
 
@@ -14,7 +13,7 @@
   (GET "/health/live" [] (json-response {:status "ok"}))
   (GET "/health/ready" [] (json-response {:status "ok"})))
 
-(def app (wrap-json-response app-routes))
+(def app app-routes)
 
 (defn -main [& _]
   (let [port (Integer/parseInt (or (System/getenv "PORT") "8080"))]
