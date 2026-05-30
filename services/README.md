@@ -337,17 +337,27 @@ ORM (Object-Relational Mapper): library that maps database rows to code objects.
 <a id="axis-matrix"></a>
 ## Feature Axis Matrix
 
-Which build args apply to which service groups.
+Which `docker build --build-arg` axes apply to which service groups.
 
-Each axis is documented in detail in "What's Coming Next" above.
+**Axis quick-reference — what each column means:**
+
+| Axis | Column | What it does | Applies to | Status |
+|---|---|---|---|---|
+| Runtime variant | RUNTIME | Swap the base image — affects security posture and compliance eligibility | All 92 Docker services | ✅ Implemented |
+| Package manager | PKG_MGR | Replace npm with pnpm / yarn / bun in the Dockerfile | JS/TS groups 01–08, 13, 14 | Designed |
+| Build tool | BUILD_TOOL | Replace Vite with webpack / rspack / esbuild as the JS/TS bundler | JS/TS groups 01–08, 13, 14 | Designed |
+| Compliance preset | COMPLIANCE | Add PCI / FIPS / HIPAA / PIPEDA middleware and startup checks | All server groups | Designed |
+| Observability | OBSERVABILITY | Add OpenTelemetry / Prometheus / Datadog instrumentation | All server groups | Designed |
+| Auth strategy | AUTH | Add JWT Bearer / OAuth2 / OIDC / API key / mTLS middleware | All server groups (see * for SSR) | Designed |
+| ORM / database | ORM | Add database library + schema example (Prisma, GORM, SQLAlchemy, etc.) | API server groups 14–27 | Designed |
 
 **Legend:**
 
 | Symbol | Meaning |
 |---|---|
-| Y | Applies — build arg works as documented for this group |
-| — | Does not apply — arg has no effect on this group |
-| * | Different pattern — applies but not via standard HTTP middleware (see Notes below) |
+| Y | Applies — standard `--build-arg` pattern works for this group |
+| — | Does not apply — build arg has no effect on this group |
+| * | Different mechanism — applies but not via standard pattern (see Notes below) |
 
 **Matrix — all 30 groups × 7 axes:**
 
@@ -358,7 +368,7 @@ Each axis is documented in detail in "What's Coming Next" above.
 | 03 Static Site Gen | Y | Y | Y | — | — | — | — |
 | 04 Island Arch | Y | Y | Y | * | * | * | — |
 | 05 Resumability | Y | Y | Y | * | * | * | — |
-| 06 Edge Runtime | — | Y | — | — | — | — | — |
+| 06 Edge Runtime | — | * | — | — | — | — | — |
 | 07 Modern Routing | Y | Y | Y | * | * | * | — |
 | 08 Module Federation | Y | Y | Y | — | — | — | — |
 | 09 Mobile / RN | — | — | — | — | — | — | — |
@@ -384,33 +394,45 @@ Each axis is documented in detail in "What's Coming Next" above.
 | 29 GraphQL Servers | Y | — | — | Y | Y | Y | — |
 | 30 WebSocket Servers | Y | — | — | Y | Y | Y | — |
 
-**Notes on `*` (different pattern):**
+**Notes on `*` cells:**
 
-Groups 01, 04, 05, 07 are SSR / full-stack frameworks (Next.js, SvelteKit, Remix, Qwik, Astro, Fresh).
+**Groups 01, 04, 05, 07 — COMPLIANCE and OBSERVABILITY:**
 
-COMPLIANCE `*` — middleware pattern applies at the HTTP handler level, same as API servers.
+Pattern: HTTP handler level — same as pure API servers.
 
-OBSERVABILITY `*` — OTel SDK applies at server startup, same as API servers.
+Behavior: applies fully.
 
-AUTH `*` — SSR frameworks use session cookies or framework-native auth (Next-Auth, SvelteKit hooks), not JWT Bearer middleware. JWT Bearer pattern works only on API routes within these frameworks. Standard middleware pattern does not apply to SSR page routes.
+Marked `*` as a reminder: verify the HTTP handler entry point before adding middleware in a full-stack framework.
 
-**Note on group 06 PKG_MANAGER `Y`:**
+**Groups 01, 04, 05, 07 — AUTH:**
 
-Group 06 (Cloudflare Workers) uses npm/pnpm in local dev and CI.
+What works: JWT Bearer middleware on `/api/*` routes within the framework.
 
-PKG_MANAGER applies to the lock file — not via a `docker build` arg (no Dockerfile).
+What does not work: standard JWT middleware on SSR page routes.
 
-`wrangler deploy` reads the lock file directly.
+Next.js page routes: use Next-Auth.
 
-**Implementation status:**
+SvelteKit page routes: use `hooks.server.ts` sessions.
 
-Y in this matrix = the axis is defined and documented.
+Remix page routes: use Remix sessions.
 
-Implementation status (done vs designed only): see "What's Coming Next" section above.
+**Group 06 — PKG_MANAGER `*`:**
 
-RUNTIME is the only axis currently implemented across all applicable groups.
+Applies via: lock file used by `wrangler deploy` — not a `docker build --build-arg`.
 
-All other axes are designed but not yet implemented in service source code.
+Does not apply: RUNTIME, BUILD_TOOL — group 06 has no Dockerfile.
+
+How to set: configure `packageManager` field in `package.json`.
+
+**Groups 02, 03, 08, 13 — COMPLIANCE, OBSERVABILITY, AUTH, ORM all `—`:**
+
+Reason: static sites served by nginx. No application server. No middleware entry point.
+
+**Groups 09–12 — all axes `—`:**
+
+Reason: CI-only targets. No Docker. No server. Build args have no effect.
+
+✅ RUNTIME = implemented today. All other axes = designed, not yet in service source code.
 
 ---
 
