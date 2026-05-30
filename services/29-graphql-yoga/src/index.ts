@@ -1,4 +1,4 @@
-import { createServer } from "node:http";
+import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { createSchema, createYoga } from "graphql-yoga";
 
 const yoga = createYoga({
@@ -8,7 +8,23 @@ const yoga = createYoga({
   }),
 });
 
+const healthBody = JSON.stringify({ status: "ok", version: "1.0.0" });
+const liveBody = JSON.stringify({ status: "ok" });
+
+function handler(req: IncomingMessage, res: ServerResponse) {
+  if (req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(healthBody);
+  }
+  if (req.url === "/health/live" || req.url === "/health/ready") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(liveBody);
+  }
+  return yoga(req, res);
+}
+
 const port = parseInt(process.env.PORT ?? "4000");
-createServer(yoga).listen(port, () => {
+createServer(handler).listen(port, () => {
   console.log(`GraphQL Yoga ready at http://localhost:${port}/graphql`);
+  console.log(`Health: GET http://localhost:${port}/health`);
 });

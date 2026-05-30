@@ -467,6 +467,7 @@ Compliance determines the registry:
 - **/live** — `Y` = `GET /health/live` route defined in source. `N` = not present. `N/A` = no server.
 - **/ready** — `Y` = `GET /health/ready` route defined in source. `N` = not present. `N/A` = no server.
 - **Tests** — `Y` = test files exist in the service directory. `N` = no test files found.
+- **Example** — `Y` = worked business-logic pattern example in the service (CRUD, auth, queue, etc.). `N` = hello world + health only. `N/A` = no server.
 
 ---
 
@@ -474,14 +475,14 @@ Compliance determines the registry:
 
 Each service runs a Node.js server that renders HTML on the server per request.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 01-angular-ssr | Angular SSR | npm | 4000 | Y | PASS | Y | Y | Y | Y |
-| 01-nextjs | Next.js | npm | 3000 | Y | PASS | Y | Y | Y | Y |
-| 01-nuxt | Nuxt | npm | 3000 | Y | PASS | Y | Y | Y | Y |
-| 01-remix | Remix | npm | 3000 | Y | PASS | Y | Y | Y | Y |
-| 01-solid-start | Solid Start | npm | 3000 | Y | PASS | Y | Y | Y | N |
-| 01-sveltekit | SvelteKit | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 01-angular-ssr | Angular SSR | npm | 4000 | Y | PASS | Y | Y | Y | Y | N |
+| 01-nextjs | Next.js | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 01-nuxt | Nuxt | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 01-remix | Remix | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 01-solid-start | Solid Start | npm | 3000 | Y | PASS | Y | Y | Y | N | N |
+| 01-sveltekit | SvelteKit | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -489,15 +490,15 @@ Each service runs a Node.js server that renders HTML on the server per request.
 
 Build output is static HTML/JS/CSS. Runtime is nginx serving those files. No Node.js in the container.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 02-angular | Angular | npm | 80 | Y | PASS | N | N | N | Y |
-| 02-lit | Lit | npm | 80 | Y | pending | N | N | N | N |
-| 02-preact | Preact | npm | 80 | Y | pending | N | N | N | N |
-| 02-react | React | npm | 80 | Y | PASS | N | N | N | Y |
-| 02-solidjs | SolidJS | npm | 80 | Y | PASS | N | N | N | Y |
-| 02-svelte | Svelte | npm | 80 | Y | PASS | N | N | N | Y |
-| 02-vue | Vue | npm | 80 | Y | PASS | N | N | N | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 02-angular | Angular | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 02-lit | Lit | npm | 80 | Y | pending | N | N | N | N | N/A |
+| 02-preact | Preact | npm | 80 | Y | pending | N | N | N | N | N/A |
+| 02-react | React | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 02-solidjs | SolidJS | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 02-svelte | Svelte | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 02-vue | Vue | npm | 80 | Y | PASS | N | N | N | Y | N/A |
 
 ---
 
@@ -505,12 +506,12 @@ Build output is static HTML/JS/CSS. Runtime is nginx serving those files. No Nod
 
 Build output is pre-rendered HTML. Runtime is nginx. Hugo uses a Go binary for the build — no npm.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 03-astro | Astro | npm | 80 | Y | PASS | N | N | N | Y |
-| 03-eleventy | Eleventy | npm | 80 | Y | PASS | N | N | N | Y |
-| 03-gatsby | Gatsby | npm | 80 | Y | PASS | N | N | N | Y |
-| 03-hugo | Hugo | — | 80 | Y | PASS | N | N | N | N |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 03-astro | Astro | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 03-eleventy | Eleventy | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 03-gatsby | Gatsby | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 03-hugo | Hugo | — | 80 | Y | PASS | N | N | N | N | N/A |
 
 ---
 
@@ -520,10 +521,10 @@ Island architecture: only interactive components hydrate in the browser. Rest is
 
 Fresh uses Deno natively — no npm.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 04-astro | Astro Islands | npm | 3000 | Y | PASS | Y | Y | Y | Y |
-| 04-fresh | Fresh | deno | 8000 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 04-astro | Astro Islands | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 04-fresh | Fresh | deno | 8000 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -531,9 +532,9 @@ Fresh uses Deno natively — no npm.
 
 Resumability: the server serializes component state to HTML. The browser resumes without re-running JavaScript.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 05-qwik | Qwik | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 05-qwik | Qwik | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -545,11 +546,11 @@ Build command: `wrangler deploy` — not `docker build`.
 
 No health endpoints — Workers respond to HTTP requests directly.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 06-hono-edge | Hono / Workers | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
-| 06-nextjs-edge | Next.js Edge | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
-| 06-remix-cloudflare | Remix / Workers | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 06-hono-edge | Hono / Workers | npm | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
+| 06-nextjs-edge | Next.js Edge | npm | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
+| 06-remix-cloudflare | Remix / Workers | npm | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
 
 ---
 
@@ -557,11 +558,11 @@ No health endpoints — Workers respond to HTTP requests directly.
 
 Same frameworks as group 01 but demonstrating specific routing features: App Router (Next.js), file-based routing (Remix/SvelteKit).
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 07-nextjs-app-router | Next.js App Router | npm | 3000 | Y | PASS | Y | Y | Y | Y |
-| 07-remix | Remix | npm | 3000 | Y | PASS | Y | Y | Y | Y |
-| 07-sveltekit | SvelteKit | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 07-nextjs-app-router | Next.js App Router | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 07-remix | Remix | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 07-sveltekit | SvelteKit | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -571,11 +572,11 @@ Module federation: multiple independently deployed frontend apps share component
 
 Runtime is nginx serving the shell app or remote entry.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 08-mf-rspack | Rspack MF | npm | 80 | Y | PASS | N | N | N | Y |
-| 08-mf-webpack | Webpack 5 MF | npm | 80 | Y | PASS | N | N | N | Y |
-| 08-single-spa | single-spa | npm | 80 | Y | PASS | N | N | N | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 08-mf-rspack | Rspack MF | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 08-mf-webpack | Webpack 5 MF | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 08-single-spa | single-spa | npm | 80 | Y | PASS | N | N | N | Y | N/A |
 
 ---
 
@@ -583,11 +584,11 @@ Runtime is nginx serving the shell app or remote entry.
 
 Build via EAS (Expo Application Services) or Metro bundler. Output is a mobile app binary, not a container.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 09-expo | Expo | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
-| 09-ionic | Ionic | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
-| 09-react-native | React Native | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 09-expo | Expo | npm | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
+| 09-ionic | Ionic | npm | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
+| 09-react-native | React Native | npm | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
 
 ---
 
@@ -595,11 +596,11 @@ Build via EAS (Expo Application Services) or Metro bundler. Output is a mobile a
 
 Build via `flutter build`, `dotnet build`, or Gradle. Output is a mobile app binary, not a container.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 10-dotnet-maui | .NET MAUI | dotnet | N/A | N/A | N/A | N/A | N/A | N/A | N |
-| 10-flutter | Flutter | flutter | N/A | N/A | N/A | N/A | N/A | N/A | N |
-| 10-kmp | Kotlin Multiplatform | gradle | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 10-dotnet-maui | .NET MAUI | dotnet | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
+| 10-flutter | Flutter | flutter | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
+| 10-kmp | Kotlin Multiplatform | gradle | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
 
 ---
 
@@ -607,10 +608,10 @@ Build via `flutter build`, `dotnet build`, or Gradle. Output is a mobile app bin
 
 Build via Xcode. Requires a macOS CI runner. No Linux Docker build possible.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 11-objc-uikit | Obj-C UIKit | xcodebuild | N/A | N/A | N/A | N/A | N/A | N/A | N |
-| 11-swift-swiftui | Swift SwiftUI | xcodebuild | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 11-objc-uikit | Obj-C UIKit | xcodebuild | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
+| 11-swift-swiftui | Swift SwiftUI | xcodebuild | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
 
 ---
 
@@ -618,10 +619,10 @@ Build via Xcode. Requires a macOS CI runner. No Linux Docker build possible.
 
 Build via Gradle on a JVM runner. Output is an APK or AAB file, not a container.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 12-java-android | Java Android | gradle | N/A | N/A | N/A | N/A | N/A | N/A | N |
-| 12-kotlin-jetpack | Kotlin Jetpack | gradle | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 12-java-android | Java Android | gradle | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
+| 12-kotlin-jetpack | Kotlin Jetpack | gradle | N/A | N/A | N/A | N/A | N/A | N/A | N | N/A |
 
 ---
 
@@ -631,10 +632,10 @@ PWA (Progressive Web App): a web app installable on mobile with offline capabili
 
 Build output is static files. Runtime is nginx.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 13-vite-pwa | Vite PWA | npm | 80 | Y | PASS | N | N | N | Y |
-| 13-workbox | Workbox | npm | 80 | Y | PASS | N | N | N | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 13-vite-pwa | Vite PWA | npm | 80 | Y | PASS | N | N | N | Y | N/A |
+| 13-workbox | Workbox | npm | 80 | Y | PASS | N | N | N | Y | N/A |
 
 ---
 
@@ -642,15 +643,15 @@ Build output is static files. Runtime is nginx.
 
 Deno uses its own dependency system (no npm needed). Elysia is Bun-native.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 14-bun | Bun native | bun | 3000 | Y | pending | Y | Y | Y | Y |
-| 14-deno | Oak (Deno) | deno | 8000 | Y | PASS | Y | Y | Y | Y |
-| 14-elysia | Elysia | bun | 3000 | Y | PASS | Y | Y | Y | Y |
-| 14-express | Express.js | npm | 3000 | Y | PASS | Y | Y | Y | Y |
-| 14-fastify | Fastify | npm | 3000 | Y | PASS | Y | Y | Y | Y |
-| 14-hono | Hono | npm | 3000 | Y | PASS | Y | Y | Y | Y |
-| 14-nestjs | NestJS | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 14-bun | Bun native | bun | 3000 | Y | pending | Y | Y | Y | Y | N |
+| 14-deno | Oak (Deno) | deno | 8000 | Y | PASS | Y | Y | Y | Y | N |
+| 14-elysia | Elysia | bun | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 14-express | Express.js | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 14-fastify | Fastify | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 14-hono | Hono | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 14-nestjs | NestJS | npm | 3000 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -660,12 +661,12 @@ All Python services use pip with `requirements.txt`. Runtime uses gunicorn (WSGI
 
 WSGI: Python standard for synchronous web servers. ASGI: Python standard for async web servers.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 15-django | Django | pip | 8080 | Y | PASS | Y | Y | Y | Y |
-| 15-fastapi | FastAPI | pip | 8080 | Y | PASS | Y | Y | Y | Y |
-| 15-flask | Flask | pip | 8080 | Y | PASS | Y | Y | Y | Y |
-| 15-starlette | Starlette | pip | 8080 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 15-django | Django | pip | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 15-fastapi | FastAPI | pip | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 15-flask | Flask | pip | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 15-starlette | Starlette | pip | 8080 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -673,12 +674,12 @@ WSGI: Python standard for synchronous web servers. ASGI: Python standard for asy
 
 Go modules (go mod) manages dependencies. Single static binary in the runtime image.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 16-chi | chi | go mod | 8080 | Y | PASS | Y | Y | Y | Y |
-| 16-echo | Echo | go mod | 8080 | Y | PASS | Y | Y | Y | Y |
-| 16-fiber | Fiber | go mod | 8080 | Y | PASS | Y | Y | Y | Y |
-| 16-gin | Gin | go mod | 8080 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 16-chi | chi | go mod | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 16-echo | Echo | go mod | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 16-fiber | Fiber | go mod | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 16-gin | Gin | go mod | 8080 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -688,11 +689,11 @@ All three use Maven for builds. All output a fat JAR (single runnable file inclu
 
 Fat JAR: a single `.jar` file that includes the application and all its dependencies.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 17-micronaut | Micronaut | Maven | 8080 | Y | PASS | Y | Y | Y | Y |
-| 17-quarkus | Quarkus | Maven | 8080 | Y | PASS | Y | Y | Y | Y |
-| 17-spring-boot | Spring Boot | Maven | 8080 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 17-micronaut | Micronaut | Maven | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 17-quarkus | Quarkus | Maven | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 17-spring-boot | Spring Boot | Maven | 8080 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -700,10 +701,10 @@ Fat JAR: a single `.jar` file that includes the application and all its dependen
 
 Both use Gradle. Ktor uses Exposed ORM. Spring Boot Kotlin is Spring Boot with Kotlin syntax.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 18-ktor | Ktor | Gradle | 8080 | Y | PASS | Y | Y | Y | Y |
-| 18-spring-boot-kotlin | Spring Boot | Gradle | 8080 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 18-ktor | Ktor | Gradle | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 18-spring-boot-kotlin | Spring Boot | Gradle | 8080 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -711,10 +712,10 @@ Both use Gradle. Ktor uses Exposed ORM. Spring Boot Kotlin is Spring Boot with K
 
 `dotnet publish` produces a self-contained binary. Port 8080 is set via `PORT` environment variable.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 19-aspnet-core | ASP.NET Core MVC | dotnet | 8080 | Y | PASS | Y | Y | Y | Y |
-| 19-minimal-apis | ASP.NET Minimal APIs | dotnet | 8080 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 19-aspnet-core | ASP.NET Core MVC | dotnet | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 19-minimal-apis | ASP.NET Minimal APIs | dotnet | 8080 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -724,10 +725,10 @@ Tests are inline `#[cfg(test)]` modules inside `src/main.rs` — no separate tes
 
 Cargo builds a single static binary. Runtime image requires no runtime dependencies.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 20-actix-web | Actix-web | cargo | 8080 | Y | PASS | Y | Y | Y | Y |
-| 20-axum | Axum | cargo | 8080 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 20-actix-web | Actix-web | cargo | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 20-axum | Axum | cargo | 8080 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -735,9 +736,9 @@ Cargo builds a single static binary. Runtime image requires no runtime dependenc
 
 Mix is Elixir's build tool and dependency manager. Phoenix is Elixir's main web framework.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 21-phoenix | Phoenix | mix | 4000 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 21-phoenix | Phoenix | mix | 4000 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -747,10 +748,10 @@ Bundler manages Ruby gems (libraries). Bun handles JavaScript asset compilation 
 
 Why bun for Ruby: Rails and Sinatra use Propshaft for asset pipeline — bun is the JS bundler it calls.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 22-rails | Ruby on Rails | bundler + bun | 3000 | Y | PASS | Y | Y | Y | Y |
-| 22-sinatra | Sinatra | bundler + bun | 3000 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 22-rails | Ruby on Rails | bundler + bun | 3000 | Y | PASS | Y | Y | Y | Y | N |
+| 22-sinatra | Sinatra | bundler + bun | 3000 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -760,11 +761,11 @@ PHP-FPM (FastCGI Process Manager): PHP runtime that handles requests behind ngin
 
 Port 9000 = PHP-FPM socket port. nginx listens on 80/8080 and proxies to PHP-FPM on 9000.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 23-laravel | Laravel | composer | 9000 | Y | PASS | Y | Y | Y | Y |
-| 23-slim | Slim | composer | 9000 | Y | PASS | Y | Y | Y | Y |
-| 23-symfony | Symfony | composer | 9000 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 23-laravel | Laravel | composer | 9000 | Y | PASS | Y | Y | Y | Y | N |
+| 23-slim | Slim | composer | 9000 | Y | PASS | Y | Y | Y | Y | N |
+| 23-symfony | Symfony | composer | 9000 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -774,10 +775,10 @@ SPM (Swift Package Manager): built into the Swift toolchain — no separate inst
 
 24-hummingbird has a placeholder test file only — no real tests yet.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 24-hummingbird | Hummingbird | SPM | 8080 | Y | PASS | Y | Y | Y | N |
-| 24-vapor | Vapor | SPM | 8080 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 24-hummingbird | Hummingbird | SPM | 8080 | Y | PASS | Y | Y | Y | N | N |
+| 24-vapor | Vapor | SPM | 8080 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -787,10 +788,10 @@ sbt (Scala Build Tool): manages dependencies and builds, similar to Maven or Gra
 
 Play Framework defaults to port 9000. http4s defaults to port 8080.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 25-http4s | http4s | sbt | 8080 | Y | PASS | Y | Y | Y | Y |
-| 25-play | Play Framework | sbt | 9000 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 25-http4s | http4s | sbt | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 25-play | Play Framework | sbt | 9000 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -798,10 +799,10 @@ Play Framework defaults to port 9000. http4s defaults to port 8080.
 
 Leiningen (lein): Clojure's primary build tool and dependency manager.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 26-pedestal | Pedestal | lein | 8080 | Y | PASS | Y | Y | Y | Y |
-| 26-ring | Ring | lein | 8080 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 26-pedestal | Pedestal | lein | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 26-ring | Ring | lein | 8080 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -811,10 +812,10 @@ CMake: build system generator — produces Makefiles or Ninja build files.
 
 Tests use GoogleTest (GTest) — built alongside the main binary via CMake.
 
-| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
-|---|---|---|---|---|---|---|---|---|---|
-| 27-crow | Crow | cmake | 8080 | Y | PASS | Y | Y | Y | Y |
-| 27-drogon | Drogon | cmake | 8080 | Y | PASS | Y | Y | Y | Y |
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests | Example |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 27-crow | Crow | cmake | 8080 | Y | PASS | Y | Y | Y | Y | N |
+| 27-drogon | Drogon | cmake | 8080 | Y | PASS | Y | Y | Y | Y | N |
 
 ---
 
@@ -828,18 +829,18 @@ Port 8080: HTTP sidecar for Kubernetes liveness/readiness probes (gRPC is not HT
 
 Health check for gRPC: `grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check`
 
-| Service | Library / SDK | Pkg Mgr | gRPC port | HTTP port | Docker | Tests |
-|---|---|---|---|---|---|---|
-| 28-go-grpc | grpc-go 1.63 | go mod | 50051 | 8080 | Y | Y |
-| 28-node-grpc | @grpc/grpc-js 1.10 | npm | 50051 | 8080 | Y | N |
-| 28-python-grpc | grpcio 1.63 | pip | 50051 | 8080 | Y | Y |
-| 28-java-grpc | grpc-java 1.63 | Maven | 50051 | 8080 | Y | N |
-| 28-kotlin-grpc | grpc-kotlin 1.4 | Gradle | 50051 | N/A | Y | N |
-| 28-dotnet-grpc | grpc-dotnet 2.62 | dotnet | 50051 | 8080 | Y | N |
-| 28-rust-grpc | tonic 0.11 | cargo | 50051 | N/A | Y | N |
-| 28-ruby-grpc | grpc 1.63 | bundler | 50051 | N/A | Y | N |
-| 28-php-grpc | grpc/grpc 1.63 | composer | 50051 | 8080 | Y | N |
-| 28-swift-grpc | grpc-swift 2.0 | SPM | 50051 | N/A | Y | N |
+| Service | Library / SDK | Pkg Mgr | gRPC port | HTTP port | Docker | Tests | Example |
+|---|---|---|---|---|---|---|---|
+| 28-go-grpc | grpc-go 1.63 | go mod | 50051 | 8080 | Y | Y | N |
+| 28-node-grpc | @grpc/grpc-js 1.10 | npm | 50051 | 8080 | Y | N | N |
+| 28-python-grpc | grpcio 1.63 | pip | 50051 | 8080 | Y | Y | N |
+| 28-java-grpc | grpc-java 1.63 | Maven | 50051 | 8080 | Y | N | N |
+| 28-kotlin-grpc | grpc-kotlin 1.4 | Gradle | 50051 | N/A | Y | N | N |
+| 28-dotnet-grpc | grpc-dotnet 2.62 | dotnet | 50051 | 8080 | Y | N | N |
+| 28-rust-grpc | tonic 0.11 | cargo | 50051 | N/A | Y | N | N |
+| 28-ruby-grpc | grpc 1.63 | bundler | 50051 | N/A | Y | N | N |
+| 28-php-grpc | grpc/grpc 1.63 | composer | 50051 | 8080 | Y | N | N |
+| 28-swift-grpc | grpc-swift 2.0 | SPM | 50051 | N/A | Y | N | N |
 
 ---
 
@@ -851,16 +852,16 @@ Introspection: disabled in production (exposes full schema to attackers — turn
 
 DataLoader: batching pattern that prevents N+1 query problems in resolvers.
 
-| Service | Library | Language | Pkg Mgr | Port | Docker | Tests |
-|---|---|---|---|---|---|---|
-| 29-apollo | Apollo Server 4.10 | TypeScript | npm | 4000 | Y | N |
-| 29-graphql-yoga | GraphQL Yoga 5.6 | TypeScript | npm | 4000 | Y | N |
-| 29-strawberry | Strawberry 0.235 | Python | pip | 8000 | Y | N |
-| 29-gqlgen | gqlgen 0.17 | Go | go mod | 8080 | Y | Y |
-| 29-spring-graphql | Spring for GraphQL 1.3 | Java | Maven | 8080 | Y | N |
-| 29-hot-chocolate | Hot Chocolate 14 | .NET C# | dotnet | 8080 | Y | N |
-| 29-graphql-ruby | graphql-ruby 2.3 | Ruby | bundler | 4567 | Y | N |
-| 29-async-graphql | async-graphql 7.0 | Rust | cargo | 8080 | Y | N |
+| Service | Library | Language | Pkg Mgr | Port | Docker | Tests | Example |
+|---|---|---|---|---|---|---|---|
+| 29-apollo | Apollo Server 4.10 | TypeScript | npm | 4000 | Y | N | N |
+| 29-graphql-yoga | GraphQL Yoga 5.6 | TypeScript | npm | 4000 | Y | N | N |
+| 29-strawberry | Strawberry 0.235 | Python | pip | 8000 | Y | N | N |
+| 29-gqlgen | gqlgen 0.17 | Go | go mod | 8080 | Y | Y | N |
+| 29-spring-graphql | Spring for GraphQL 1.3 | Java | Maven | 8080 | Y | N | N |
+| 29-hot-chocolate | Hot Chocolate 14 | .NET C# | dotnet | 8080 | Y | N | N |
+| 29-graphql-ruby | graphql-ruby 2.3 | Ruby | bundler | 4567 | Y | N | N |
+| 29-async-graphql | async-graphql 7.0 | Rust | cargo | 8080 | Y | N | N |
 
 ---
 
@@ -872,16 +873,16 @@ Horizontal scaling: WebSocket requires sticky sessions or Redis pub/sub because 
 
 Health probe: Kubernetes cannot probe wss:// — use the HTTP GET /health sidecar on the same port.
 
-| Service | Library | Language | Pkg Mgr | Port | Docker | Tests |
-|---|---|---|---|---|---|---|
-| 30-ws-node | ws 8.17 | TypeScript | npm | 8080 | Y | N |
-| 30-ws-go | gorilla/websocket 1.5 | Go | go mod | 8080 | Y | Y |
-| 30-ws-python | websockets 12.0 / FastAPI | Python | pip | 8080 | Y | Y |
-| 30-ws-java | Java-WebSocket 1.5 | Java | Maven | 8080 | Y | N |
-| 30-ws-elixir | Plug.Cowboy 2.7 | Elixir | mix | 8080 | Y | N |
-| 30-ws-rust | tokio-tungstenite 0.23 / Axum | Rust | cargo | 8080 | Y | N |
-| 30-ws-dotnet | ASP.NET WebSocket middleware | C# | dotnet | 8080 | Y | N |
-| 30-ws-ruby | faye-websocket 0.11 | Ruby | bundler | 9292 | Y | N |
+| Service | Library | Language | Pkg Mgr | Port | Docker | Tests | Example |
+|---|---|---|---|---|---|---|---|
+| 30-ws-node | ws 8.17 | TypeScript | npm | 8080 | Y | N | N |
+| 30-ws-go | gorilla/websocket 1.5 | Go | go mod | 8080 | Y | Y | N |
+| 30-ws-python | websockets 12.0 / FastAPI | Python | pip | 8080 | Y | Y | N |
+| 30-ws-java | Java-WebSocket 1.5 | Java | Maven | 8080 | Y | N | N |
+| 30-ws-elixir | Plug.Cowboy 2.7 | Elixir | mix | 8080 | Y | N | N |
+| 30-ws-rust | tokio-tungstenite 0.23 / Axum | Rust | cargo | 8080 | Y | N | N |
+| 30-ws-dotnet | ASP.NET WebSocket middleware | C# | dotnet | 8080 | Y | N | N |
+| 30-ws-ruby | faye-websocket 0.11 | Ruby | bundler | 9292 | Y | N | N |
 
 ---
 
