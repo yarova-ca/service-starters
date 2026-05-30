@@ -280,6 +280,85 @@ ORM (Object-Relational Mapper): library that maps database rows to code objects.
 
 ---
 
+## Feature Axis Matrix
+
+Which build args apply to which service groups.
+
+Each axis is documented in detail in "What's Coming Next" above.
+
+**Legend:**
+
+| Symbol | Meaning |
+|---|---|
+| Y | Applies — build arg works as documented for this group |
+| — | Does not apply — arg has no effect on this group |
+| * | Different pattern — applies but not via standard HTTP middleware (see Notes below) |
+
+**Matrix — all 30 groups × 7 axes:**
+
+| Group | RUNTIME | PKG_MGR | BUILD_TOOL | COMPLIANCE | OBSERVABILITY | AUTH | ORM |
+|---|---|---|---|---|---|---|---|
+| 01 SSR / Full-stack | Y | Y | Y | * | * | * | — |
+| 02 Frontend SPA | Y | Y | Y | — | — | — | — |
+| 03 Static Site Gen | Y | Y | Y | — | — | — | — |
+| 04 Island Arch | Y | Y | Y | * | * | * | — |
+| 05 Resumability | Y | Y | Y | * | * | * | — |
+| 06 Edge Runtime | — | Y | — | — | — | — | — |
+| 07 Modern Routing | Y | Y | Y | * | * | * | — |
+| 08 Module Federation | Y | Y | Y | — | — | — | — |
+| 09 Mobile / RN | — | — | — | — | — | — | — |
+| 10 Cross-platform | — | — | — | — | — | — | — |
+| 11 Native iOS | — | — | — | — | — | — | — |
+| 12 Native Android | — | — | — | — | — | — | — |
+| 13 PWA | Y | Y | Y | — | — | — | — |
+| 14 JS/TS Servers | Y | Y | Y | Y | Y | Y | Y |
+| 15 Python Servers | Y | — | — | Y | Y | Y | Y |
+| 16 Go Servers | Y | — | — | Y | Y | Y | Y |
+| 17 Java Servers | Y | — | — | Y | Y | Y | Y |
+| 18 Kotlin Servers | Y | — | — | Y | Y | Y | Y |
+| 19 .NET Servers | Y | — | — | Y | Y | Y | Y |
+| 20 Rust Servers | Y | — | — | Y | Y | Y | Y |
+| 21 Elixir Servers | Y | — | — | Y | Y | Y | Y |
+| 22 Ruby Servers | Y | — | — | Y | Y | Y | Y |
+| 23 PHP Servers | Y | — | — | Y | Y | Y | Y |
+| 24 Swift Servers | Y | — | — | Y | Y | Y | Y |
+| 25 Scala Servers | Y | — | — | Y | Y | Y | Y |
+| 26 Clojure Servers | Y | — | — | Y | Y | Y | Y |
+| 27 C++ Servers | Y | — | — | Y | Y | Y | Y |
+| 28 gRPC Servers | Y | — | — | Y | Y | Y | — |
+| 29 GraphQL Servers | Y | — | — | Y | Y | Y | — |
+| 30 WebSocket Servers | Y | — | — | Y | Y | Y | — |
+
+**Notes on `*` (different pattern):**
+
+Groups 01, 04, 05, 07 are SSR / full-stack frameworks (Next.js, SvelteKit, Remix, Qwik, Astro, Fresh).
+
+COMPLIANCE `*` — middleware pattern applies at the HTTP handler level, same as API servers.
+
+OBSERVABILITY `*` — OTel SDK applies at server startup, same as API servers.
+
+AUTH `*` — SSR frameworks use session cookies or framework-native auth (Next-Auth, SvelteKit hooks), not JWT Bearer middleware. JWT Bearer pattern works only on API routes within these frameworks. Standard middleware pattern does not apply to SSR page routes.
+
+**Note on group 06 PKG_MANAGER `Y`:**
+
+Group 06 (Cloudflare Workers) uses npm/pnpm in local dev and CI.
+
+PKG_MANAGER applies to the lock file — not via a `docker build` arg (no Dockerfile).
+
+`wrangler deploy` reads the lock file directly.
+
+**Implementation status:**
+
+Y in this matrix = the axis is defined and documented.
+
+Implementation status (done vs designed only): see "What's Coming Next" section above.
+
+RUNTIME is the only axis currently implemented across all applicable groups.
+
+All other axes are designed but not yet implemented in service source code.
+
+---
+
 ## Composing Variants — Full Build Command
 
 All planned axes compose in a single `docker build` call.
