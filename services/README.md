@@ -2,9 +2,10 @@
 
 105 production-ready service templates.
 30 language and protocol groups. Every major tech stack covered.
-All server services (groups 01, 04, 05, 07, 14–30) expose `/health`, `/health/live`, `/health/ready`.
+Server services (groups 01, 04, 05, 07, 14–27, 29–30) expose `/health`, `/health/live`, `/health/ready`.
 Static/nginx services (groups 02, 03, 08, 13): no app-level health — nginx on port 80 = the health signal.
-gRPC services (group 28): HTTP health sidecar on port 8080 + `grpc.health.v1.Health/Check` on port 50051.
+gRPC services (group 28): 6 of 10 have HTTP health sidecar on port 8080. All 10 implement `grpc.health.v1.Health/Check` on port 50051.
+Note: 28-kotlin-grpc, 28-rust-grpc, 28-ruby-grpc, 28-swift-grpc have no HTTP sidecar — probe via gRPC protocol only.
 All Docker services pass `docker build --target runtime`.
 
 ---
@@ -144,19 +145,18 @@ gRPC services (group 28) expose gRPC on port 50051 and an HTTP health sidecar on
 
 Note: gRPC health probes use `grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check`.
 
-GraphQL services (group 29) expose POST /graphql and GET /health on the same port.
+GraphQL services (group 29) expose POST /graphql and GET /health, /health/live, /health/ready on the same port.
 
-WebSocket services (group 30) expose ws:// on /ws and HTTP GET /health on the same port.
+WebSocket services (group 30) expose ws:// on /ws and HTTP GET /health, /health/live, /health/ready.
+Exception: 30-ws-java exposes HTTP health on port wsPort+1 (default 8081), not the WebSocket port (8080).
 
 When using frontend services with Kubernetes probes: point probes to `GET /` expecting HTTP 200.
 
 ### 3. Tests (Works Today)
 
-Test files exist in 57 of 75 services.
+Test files exist in 66 of 105 services.
 
-Test files are missing in: `03-hugo`, `06-*`, `09-*`, `10-*`, `11-*`, `12-*`, `24-hummingbird`.
-
-All missing test services are either CI-only (no Docker, no server) or a placeholder Swift file.
+All missing test services are either CI-only (no Docker, no server), a placeholder Swift file, or a new protocol service (groups 28–30) not yet covered by tests.
 
 ---
 
@@ -871,7 +871,7 @@ WebSocket: full-duplex TCP connection started via HTTP Upgrade — persistent, b
 
 Horizontal scaling: WebSocket requires sticky sessions or Redis pub/sub because messages go to one pod.
 
-Health probe: Kubernetes cannot probe wss:// — use the HTTP GET /health sidecar on the same port.
+Health probe: Kubernetes cannot probe wss:// — use HTTP GET /health on the same port (except 30-ws-java: use port 8081).
 
 | Service | Library | Language | Pkg Mgr | Port | Docker | Tests | Example |
 |---|---|---|---|---|---|---|---|
@@ -893,11 +893,11 @@ Health probe: Kubernetes cannot probe wss:// — use the HTTP GET /health sideca
 | Total services | 105 |
 | Services with Docker | 92 |
 | CI-only (no Docker — edge/mobile/native, by design) | 13 |
-| Server services with /health + /health/live + /health/ready | 79 |
-| Static/nginx services — health = nginx port 80 response | 13 |
+| Server services with /health + /health/live + /health/ready | 72 |
+| Static/nginx services — health = nginx port 80 response | 16 |
 | gRPC services — health via grpc.health.v1 + HTTP sidecar | 10 |
-| Services with test files | 61 |
-| Services missing tests | 44 |
+| Services with test files | 66 |
+| Services missing tests | 39 |
 
 Tests missing in new services (groups 28–30): all except `28-go-grpc`, `28-python-grpc`, `29-gqlgen`, `30-ws-go`, `30-ws-python`.
 
