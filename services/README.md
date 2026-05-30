@@ -2,7 +2,9 @@
 
 105 production-ready service templates.
 30 language and protocol groups. Every major tech stack covered.
-All server services expose `/health`, `/health/live`, `/health/ready`.
+All server services (groups 01, 04, 05, 07, 14–30) expose `/health`, `/health/live`, `/health/ready`.
+Static/nginx services (groups 02, 03, 08, 13): no app-level health — nginx on port 80 = the health signal.
+gRPC services (group 28): HTTP health sidecar on port 8080 + `grpc.health.v1.Health/Check` on port 50051.
 All Docker services pass `docker build --target runtime`.
 
 ---
@@ -123,7 +125,7 @@ docker build \
 
 ### 2. Health Endpoints (Works Today)
 
-All server services (groups 14–27, 28–30) and `01-angular-ssr` expose these routes.
+All server services (groups 01, 04, 05, 07, 14–27, 28–30) expose these routes.
 
 | Endpoint | Purpose | Response |
 |---|---|---|
@@ -135,7 +137,8 @@ Liveness probe: when this returns non-200, Kubernetes restarts the pod.
 
 Readiness probe: when this returns non-200, Kubernetes stops sending traffic to the pod.
 
-Frontend services (groups 02–05, 07–08, 13) serve static files via nginx.
+Static/nginx services (groups 02, 03, 08, 13) serve static files via nginx — no app health endpoint.
+When using with Kubernetes: point liveness probe to `GET /` port 80 — nginx responding = healthy.
 
 gRPC services (group 28) expose gRPC on port 50051 and an HTTP health sidecar on port 8080.
 
@@ -474,11 +477,11 @@ Each service runs a Node.js server that renders HTML on the server per request.
 | Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
 |---|---|---|---|---|---|---|---|---|---|
 | 01-angular-ssr | Angular SSR | npm | 4000 | Y | PASS | Y | Y | Y | Y |
-| 01-nextjs | Next.js | npm | 3000 | Y | PASS | N | N | N | Y |
-| 01-nuxt | Nuxt | npm | 3000 | Y | PASS | N | N | N | Y |
-| 01-remix | Remix | npm | 3000 | Y | PASS | N | N | N | Y |
-| 01-solid-start | Solid Start | npm | 3000 | Y | pending | Y | Y | Y | N |
-| 01-sveltekit | SvelteKit | npm | 3000 | Y | PASS | N | N | N | Y |
+| 01-nextjs | Next.js | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| 01-nuxt | Nuxt | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| 01-remix | Remix | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| 01-solid-start | Solid Start | npm | 3000 | Y | PASS | Y | Y | Y | N |
+| 01-sveltekit | SvelteKit | npm | 3000 | Y | PASS | Y | Y | Y | Y |
 
 ---
 
@@ -519,8 +522,8 @@ Fresh uses Deno natively — no npm.
 
 | Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
 |---|---|---|---|---|---|---|---|---|---|
-| 04-astro | Astro Islands | npm | 3000 | Y | PASS | N | N | N | Y |
-| 04-fresh | Fresh | deno | 8000 | Y | PASS | N | N | N | Y |
+| 04-astro | Astro Islands | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| 04-fresh | Fresh | deno | 8000 | Y | PASS | Y | Y | Y | Y |
 
 ---
 
@@ -530,7 +533,7 @@ Resumability: the server serializes component state to HTML. The browser resumes
 
 | Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
 |---|---|---|---|---|---|---|---|---|---|
-| 05-qwik | Qwik | npm | 3000 | Y | PASS | N | N | N | Y |
+| 05-qwik | Qwik | npm | 3000 | Y | PASS | Y | Y | Y | Y |
 
 ---
 
@@ -556,9 +559,9 @@ Same frameworks as group 01 but demonstrating specific routing features: App Rou
 
 | Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
 |---|---|---|---|---|---|---|---|---|---|
-| 07-nextjs-app-router | Next.js App Router | npm | 3000 | Y | PASS | N | N | N | Y |
-| 07-remix | Remix | npm | 3000 | Y | PASS | N | N | N | Y |
-| 07-sveltekit | SvelteKit | npm | 3000 | Y | PASS | N | N | N | Y |
+| 07-nextjs-app-router | Next.js App Router | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| 07-remix | Remix | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| 07-sveltekit | SvelteKit | npm | 3000 | Y | PASS | Y | Y | Y | Y |
 
 ---
 
@@ -888,13 +891,11 @@ Health probe: Kubernetes cannot probe wss:// — use the HTTP GET /health sideca
 |---|---|
 | Total services | 105 |
 | Services with Docker | 92 |
-| CI-only services (no Docker) | 13 |
-| Docker builds verified PASS (groups 01–27) | 62 |
-| Docker builds pending verification (new in 01, 02, 14, 28–30) | 30 |
-| Server services with all 3 HTTP health endpoints | 64 |
-| Frontend/static services (no health endpoints) | 26 |
-| gRPC services (health via grpc.health.v1 + HTTP sidecar) | 10 |
-| Services with tests | 61 |
+| CI-only (no Docker — edge/mobile/native, by design) | 13 |
+| Server services with /health + /health/live + /health/ready | 79 |
+| Static/nginx services — health = nginx port 80 response | 13 |
+| gRPC services — health via grpc.health.v1 + HTTP sidecar | 10 |
+| Services with test files | 61 |
 | Services missing tests | 44 |
 
 Tests missing in new services (groups 28–30): all except `28-go-grpc`, `28-python-grpc`, `29-gqlgen`, `30-ws-go`, `30-ws-python`.
