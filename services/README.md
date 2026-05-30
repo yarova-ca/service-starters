@@ -1,0 +1,924 @@
+# Service Starters — Developer Catalog
+
+105 production-ready service templates.
+30 language and protocol groups. Every major tech stack covered.
+All server services expose `/health`, `/health/live`, `/health/ready`.
+All Docker services pass `docker build --target runtime`.
+
+---
+
+## Quick Start — Run Any Service in 4 Commands
+
+```bash
+# 1. Pick a service directory
+cd services/14-express
+
+# 2. Build the runtime image
+docker build --target runtime -t my-service .
+
+# 3. Run it
+docker run --rm -p 3000:3000 my-service
+
+# 4. Verify health
+curl http://localhost:3000/health
+# → {"status":"ok"}
+```
+
+Replace `14-express` with any service directory name.
+Replace `3000` with the port shown in the Service Catalog below.
+
+---
+
+## What This Repo Is
+
+A catalog of starter services — one per framework and language.
+
+Each service is a complete, runnable starting point.
+
+Each service includes:
+- A working Dockerfile with `--target runtime` stage
+- A health endpoint at `/health`
+- A liveness probe at `/health/live` (Kubernetes restarts pod on non-200)
+- A readiness probe at `/health/ready` (Kubernetes removes pod from load balancer on non-200)
+- Tests (where applicable)
+
+**Who uses this:**
+- A team picking a backend language starts here, not from scratch.
+- A platform team wiring up CI uses this as the build target.
+- A consultant matching a client's compliance requirement selects the right variant.
+
+---
+
+## Group Map — What Each Number Means
+
+| Groups | Domain | Has Docker | Has server |
+|---|---|---|---|
+| 01 | SSR / Full-stack (Next.js, Nuxt, Remix, SvelteKit, Angular SSR, Solid Start) | Yes | Yes — Node.js |
+| 02 | Frontend SPA — React, Vue, Angular, Svelte, SolidJS, Preact, Lit | Yes | No — nginx static |
+| 03 | Static site generators — Astro, Eleventy, Gatsby, Hugo | Yes | No — nginx static |
+| 04 | Island architecture — Astro Islands, Fresh | Yes | No — nginx static |
+| 05 | Resumability — Qwik | Yes | Yes — Node.js |
+| 06 | Edge runtime — Cloudflare Workers | No | No — CI deploy only |
+| 07 | Modern routing — Next.js App Router, Remix, SvelteKit | Yes | Yes — Node.js |
+| 08 | Module federation — Webpack MF, Rspack MF, single-spa | Yes | No — nginx static |
+| 09 | Mobile / React Native — Expo, Ionic, React Native | No | No — CI only |
+| 10 | Cross-platform mobile — Flutter, .NET MAUI, Kotlin MP | No | No — CI only |
+| 11 | Native iOS — Swift SwiftUI, Objective-C UIKit | No | No — Xcode only |
+| 12 | Native Android — Kotlin Jetpack Compose, Java | No | No — Gradle only |
+| 13 | Progressive Web Apps — Vite PWA, Workbox | Yes | No — nginx static |
+| 14 | JS/TS servers — Express, Fastify, Hono, NestJS, Elysia, Deno, Bun native | Yes | Yes |
+| 15 | Python servers — Django, FastAPI, Flask, Starlette | Yes | Yes |
+| 16 | Go servers — Gin, Echo, Fiber, chi | Yes | Yes |
+| 17 | Java servers — Spring Boot, Quarkus, Micronaut | Yes | Yes |
+| 18 | Kotlin servers — Ktor, Spring Boot Kotlin | Yes | Yes |
+| 19 | .NET / C# servers — ASP.NET Core MVC, Minimal APIs | Yes | Yes |
+| 20 | Rust servers — Axum, Actix-web | Yes | Yes |
+| 21 | Elixir servers — Phoenix | Yes | Yes |
+| 22 | Ruby servers — Rails, Sinatra | Yes | Yes |
+| 23 | PHP servers — Laravel, Slim, Symfony | Yes | Yes |
+| 24 | Swift servers — Vapor, Hummingbird | Yes | Yes |
+| 25 | Scala servers — http4s, Play Framework | Yes | Yes |
+| 26 | Clojure servers — Pedestal, Ring | Yes | Yes |
+| 27 | C++ servers — Crow, Drogon | Yes | Yes |
+| 28 | gRPC servers — Go, Node, Python, Java, Kotlin, .NET, Rust, Ruby, PHP, Swift | Yes | Yes — port 50051 |
+| 29 | GraphQL servers — Apollo, Yoga, Strawberry, gqlgen, Spring, Hot Chocolate, Ruby, Rust | Yes | Yes — /graphql |
+| 30 | WebSocket servers — Node, Go, Python, Java, Elixir, Rust, .NET, Ruby | Yes | Yes — /ws |
+
+---
+
+## What Works Today
+
+These features exist in the repo right now and are tested.
+
+### 1. Docker Runtime Variants (Works Today)
+
+Every Dockerfile contains 5 runtime base image options.
+
+One block is uncommented (active). The other 4 are commented out.
+
+To switch: comment out the active block, uncomment the target block, rebuild.
+
+| Variant | Base image | When to use |
+|---|---|---|
+| `standard` | `debian:bookworm-slim` | Default. Development. General commercial workloads. |
+| `slim` | `gcr.io/distroless/base-debian12` | No shell, no package manager in runtime. Smaller attack surface. |
+| `chainguard` | `cgr.dev/chainguard/static` | Zero known CVEs. Supply-chain signed SBOM. SOC 2 Type II. |
+| `ubi9` | `registry.access.redhat.com/ubi9-minimal` | FIPS-140-2 crypto. Government and regulated workloads. |
+| `edge` | `debian:bookworm-slim` + multi-arch | Builds `linux/amd64` AND `linux/arm64` in one command. |
+
+SBOM (Software Bill of Materials): a signed list of every dependency in the image.
+
+FIPS-140-2: US/Canadian government crypto standard — mandatory for federal systems.
+
+**To build a specific variant:**
+
+```bash
+# Example: build the UBI9 FIPS variant of the Express service
+docker build \
+  --target runtime \
+  --build-arg RUNTIME=ubi9 \
+  -t my-service:ubi9 \
+  services/14-express
+```
+
+### 2. Health Endpoints (Works Today)
+
+All server services (groups 14–27, 28–30) and `01-angular-ssr` expose these routes.
+
+| Endpoint | Purpose | Response |
+|---|---|---|
+| `GET /health` | Manual health check | `200 {"status":"ok"}` |
+| `GET /health/live` | Kubernetes liveness probe | `200 {"status":"ok"}` |
+| `GET /health/ready` | Kubernetes readiness probe | `200 {"status":"ok"}` |
+
+Liveness probe: when this returns non-200, Kubernetes restarts the pod.
+
+Readiness probe: when this returns non-200, Kubernetes stops sending traffic to the pod.
+
+Frontend services (groups 02–05, 07–08, 13) serve static files via nginx.
+
+gRPC services (group 28) expose gRPC on port 50051 and an HTTP health sidecar on port 8080.
+
+Note: gRPC health probes use `grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check`.
+
+GraphQL services (group 29) expose POST /graphql and GET /health on the same port.
+
+WebSocket services (group 30) expose ws:// on /ws and HTTP GET /health on the same port.
+
+When using frontend services with Kubernetes probes: point probes to `GET /` expecting HTTP 200.
+
+### 3. Tests (Works Today)
+
+Test files exist in 57 of 75 services.
+
+Test files are missing in: `03-hugo`, `06-*`, `09-*`, `10-*`, `11-*`, `12-*`, `24-hummingbird`.
+
+All missing test services are either CI-only (no Docker, no server) or a placeholder Swift file.
+
+---
+
+## What's Coming Next (Designed — Not Yet Implemented)
+
+These features are designed and documented here.
+
+The code changes have not been made yet.
+
+A `BUILD_ARG=value` notation shows the planned activation mechanism.
+
+### Package Manager Swap (JS/TS services — groups 01–08, 13, 14)
+
+Today all JS/TS services use `npm`.
+
+Planned: swap by setting `PKG_MANAGER` build arg.
+
+| `PKG_MANAGER=` | Tool | Lock file | Install command |
+|---|---|---|---|
+| `npm` (default) | npm | `package-lock.json` | `npm ci` |
+| `pnpm` | pnpm — faster, shared cache | `pnpm-lock.yaml` | `pnpm install --frozen-lockfile` |
+| `yarn` | Yarn | `yarn.lock` | `yarn install --immutable` |
+| `bun` | Bun — fastest, native bundler | `bun.lockb` | `bun install --frozen-lockfile` |
+
+Exception today: `14-elysia` already uses `bun` (Elysia is a Bun-native framework).
+
+Exception today: `22-rails` and `22-sinatra` already use `bun` for JS asset compilation.
+
+### Build Tool Swap (JS/TS services)
+
+Today all JS/TS services use Vite as the bundler (where applicable).
+
+Planned: swap by setting `BUILD_TOOL` build arg.
+
+| `BUILD_TOOL=` | Tool | Best for |
+|---|---|---|
+| `vite` (default) | Vite | Most JS/TS apps. Fastest dev rebuild. |
+| `webpack` | Webpack 5 | Legacy compatibility. Module Federation (groups 08). |
+| `rspack` | Rspack — Webpack-compatible, written in Rust | Teams migrating from Webpack. Faster builds. |
+| `esbuild` | esbuild — Go-based bundler | Maximum build speed. Minimal config. |
+| `turbopack` | Turbopack | Next.js only. Set in `next.config.ts`, not a build arg. |
+
+### Compliance Preset (All server services)
+
+Today all services run with no compliance additions.
+
+Planned: activate a compliance preset with `COMPLIANCE` build arg.
+
+Each preset adds specific middleware, headers, library swaps, and startup checks.
+
+| `COMPLIANCE=` | What it adds | Required for |
+|---|---|---|
+| `standard` (default) | Nothing. Base service only. | Commercial, SaaS, general use |
+| `pci` | TLS enforced, PCI audit response headers, debug endpoints removed, no-plaintext-secrets startup check | Payments, retail, financial services with card data |
+| `fips` | FIPS-140-2 OpenSSL module active, non-FIPS cipher suites disabled. **Requires `RUNTIME=ubi9`.** | Federal government, defense, regulated finance |
+| `hipaa` | PHI field masking in logs, audit trail middleware, verbose error responses disabled | Healthcare, life sciences, medical devices |
+| `cmmc` | Full audit log enforced, debug routes removed, no outbound internet at runtime, CUI data handling | Defense contractors, intelligence-adjacent work |
+| `pipeda` | Consent check middleware, data residency header (`X-Data-Residency: CA`), PII field masking in logs | Any Canadian consumer-facing service |
+| `nerc` | Network isolation config, no internet egress, OT/IT boundary enforcement headers | Power grid, utilities, industrial control systems |
+| `soc2` | Immutable audit log, access control middleware, debug disabled | SaaS platforms, fintech, enterprise software |
+
+PHI (Protected Health Information): personal health data regulated under PIPEDA/PHIA.
+
+CUI (Controlled Unclassified Information): sensitive but unclassified government data.
+
+PII (Personally Identifiable Information): data that identifies a specific person.
+
+**Rule:** When `COMPLIANCE=fips` and `RUNTIME` is not `ubi9`: build fails with an error message.
+
+### Observability Stack
+
+Planned: activate with `OBSERVABILITY` build arg.
+
+| `OBSERVABILITY=` | What activates | Standard |
+|---|---|---|
+| `none` (default) | Nothing | — |
+| `otel` | OpenTelemetry SDK + OTLP exporter for traces, metrics, and logs | CNCF open standard — works with Jaeger, Grafana, Datadog |
+| `prometheus` | Prometheus metrics endpoint at `/metrics` | Kubernetes-native — Prometheus scrapes `/metrics` |
+| `datadog` | Datadog tracer + APM agent | Datadog-only |
+
+OpenTelemetry: open standard for observability data — not tied to any vendor.
+
+OTLP (OpenTelemetry Protocol): the wire format for sending telemetry data.
+
+### Auth Strategy
+
+Planned: activate with `AUTH` build arg.
+
+| `AUTH=` | What activates | Protocol |
+|---|---|---|
+| `none` (default) | No auth | — |
+| `jwt` | JWT Bearer token validation middleware on all routes | RFC 7519 |
+| `oauth2` | OAuth2 client credentials flow | RFC 6749 |
+| `oidc` | OpenID Connect — SSO with an external identity provider | OpenID Core 1.0 |
+| `apikey` | API key header validation — checks `X-API-Key` header | Custom |
+| `mtls` | Mutual TLS — client certificate required per request | RFC 8705 |
+
+When `AUTH=mtls`: `RUNTIME` must be `ubi9` or `chainguard`.
+
+Why: mTLS requires FIPS-grade TLS libraries. Only UBI9 and Chainguard base images include them.
+
+### ORM / Database Layer
+
+Planned: activate with `ORM` build arg. Applies to server groups 14–27.
+
+| Language group | Default ORM | Available alternatives |
+|---|---|---|
+| Node.js (14) | Prisma | Drizzle, TypeORM, Knex |
+| Python (15) | SQLAlchemy | Tortoise ORM, Django ORM |
+| Go (16) | GORM | sqlx, pgx (raw driver) |
+| Java (17) | Hibernate / Spring Data | jOOQ |
+| Kotlin (18) | Exposed (Ktor) | Spring Data JPA |
+| .NET / C# (19) | Entity Framework Core | Dapper |
+| Rust (20) | sqlx | Diesel |
+| Ruby (22) | Active Record (Rails) | Sequel |
+| PHP (23) | Eloquent (Laravel) | Doctrine (Symfony) |
+| Scala (25) | Slick | Doobie |
+| Elixir (21) | Ecto | — |
+
+ORM (Object-Relational Mapper): library that maps database rows to code objects.
+
+---
+
+## Composing Variants — Full Build Command
+
+All planned axes compose in a single `docker build` call.
+
+```bash
+docker build \
+  --target runtime \
+  --build-arg RUNTIME=ubi9 \
+  --build-arg PKG_MANAGER=pnpm \
+  --build-arg BUILD_TOOL=vite \
+  --build-arg OBSERVABILITY=otel \
+  --build-arg AUTH=oidc \
+  --build-arg ORM=prisma \
+  --build-arg COMPLIANCE=fips \
+  -t my-service:fips-ubi9-otel-oidc \
+  services/14-express
+```
+
+Minimum build (all defaults):
+
+```bash
+docker build --target runtime -t my-service:latest services/14-express
+```
+
+---
+
+## Industry Vertical → Variant Reference
+
+Which variant combination to use for each industry.
+
+This is self-contained — no external doc needed.
+
+### Financial Services
+Banks, credit unions, fintechs, payment processors, investment firms.
+
+Regulations that apply: OSFI (bank risk management), FINTRAC (anti-money laundering reporting), PCI DSS (payment card security).
+
+| What you're building | Variant combination |
+|---|---|
+| Payment processing service | `RUNTIME=chainguard` + `COMPLIANCE=pci` + `AUTH=mtls` |
+| Open banking API | `RUNTIME=slim` + `COMPLIANCE=pci` + `AUTH=oauth2` |
+| AML / KYC pipeline | `RUNTIME=chainguard` + `COMPLIANCE=soc2` + `AUTH=oidc` |
+| Internal tooling (no card data) | `RUNTIME=slim` + `COMPLIANCE=soc2` + `AUTH=jwt` |
+
+### Government — Federal (Canada)
+CRA, ESDC, IRCC, SSC, PSPC and all federal departments.
+
+Regulations: ITSG-33 (IT security risk management), Protected B (sensitive unclassified data), WCAG 2.1 AA (accessibility), Official Languages Act (English + French).
+
+Clearance: Reliability Status minimum. Secret for ~40% of roles. Top Secret for DND/CSE/CSIS.
+
+| What you're building | Variant combination |
+|---|---|
+| Public-facing portal | `RUNTIME=ubi9` + `COMPLIANCE=fips` + `AUTH=oidc` |
+| Internal Protected B system | `RUNTIME=ubi9` + `COMPLIANCE=fips` + `AUTH=mtls` |
+| API service (GC API guidelines) | `RUNTIME=ubi9` + `COMPLIANCE=fips` + `AUTH=oauth2` |
+
+### Government — Provincial
+Ontario, BC, Alberta, Quebec provincial ministries and agencies.
+
+Regulations: FIPPA (Freedom of Information and Protection of Privacy Act), provincial equivalents of PIPEDA.
+
+| What you're building | Variant combination |
+|---|---|
+| Citizen-facing service | `RUNTIME=slim` + `COMPLIANCE=pipeda` + `AUTH=oidc` |
+| Internal staff system | `RUNTIME=standard` + `COMPLIANCE=pipeda` + `AUTH=jwt` |
+
+### Defense and Intelligence
+DND (Department of National Defense), CSE (Communications Security Establishment), defense contractors.
+
+Regulations: CMMC (Cybersecurity Maturity Model Certification), ITAR awareness, Top Secret clearance required for most roles.
+
+| What you're building | Variant combination |
+|---|---|
+| Any defense system | `RUNTIME=ubi9` + `COMPLIANCE=cmmc` + `COMPLIANCE=fips` + `AUTH=mtls` |
+
+### Healthcare and Life Sciences
+Hospitals, clinics, pharma companies, medical device makers, biotech.
+
+Regulations: PIPEDA (personal data), PHIA (personal health information — provincial), FHIR (health data interoperability standard), Health Canada device regulations.
+
+| What you're building | Variant combination |
+|---|---|
+| Patient data system | `RUNTIME=chainguard` + `COMPLIANCE=hipaa` + `COMPLIANCE=pipeda` + `AUTH=oidc` |
+| Clinical trial platform | `RUNTIME=chainguard` + `COMPLIANCE=soc2` + `AUTH=oauth2` |
+| Medical device API | `RUNTIME=ubi9` + `COMPLIANCE=fips` + `AUTH=mtls` |
+
+### Energy and Utilities
+Oil and gas, renewable energy, power grid, water utilities.
+
+Regulations: NERC CIP (North American Electric Reliability Corporation — Critical Infrastructure Protection), mandatory for any system connected to the power grid.
+
+| What you're building | Variant combination |
+|---|---|
+| Grid-connected system | `RUNTIME=ubi9` + `COMPLIANCE=nerc` + `COMPLIANCE=fips` + `AUTH=mtls` |
+| Field operations tool | `RUNTIME=slim` + `COMPLIANCE=soc2` + `AUTH=jwt` |
+
+### Technology and SaaS
+Software companies, AI/ML platforms, developer tools, enterprise SaaS.
+
+Regulations: SOC 2 Type II (security audit standard required by enterprise customers), PIPEDA for Canadian users, EU AI Act if serving EU customers.
+
+| What you're building | Variant combination |
+|---|---|
+| Enterprise SaaS API | `RUNTIME=slim` + `COMPLIANCE=soc2` + `AUTH=jwt` or `oauth2` |
+| AI inference service | `RUNTIME=chainguard` + `COMPLIANCE=soc2` + `AUTH=apikey` |
+| Internal developer tool | `RUNTIME=standard` + no compliance preset |
+
+### Retail and Commerce
+E-commerce platforms, point-of-sale systems, payment integrations.
+
+Regulations: PCI DSS (mandatory when storing, processing, or transmitting card data).
+
+| What you're building | Variant combination |
+|---|---|
+| Checkout / payment service | `RUNTIME=chainguard` + `COMPLIANCE=pci` + `AUTH=oauth2` |
+| Product catalog / storefront | `RUNTIME=slim` + no compliance preset + `AUTH=jwt` |
+
+### Telecommunications
+Mobile carriers, ISPs, cable companies.
+
+Regulations: CRTC (Canadian Radio-television and Telecommunications Commission — governs data retention, privacy).
+
+| What you're building | Variant combination |
+|---|---|
+| Customer data service | `RUNTIME=slim` + `COMPLIANCE=pipeda` + `AUTH=oauth2` |
+| Network management API | `RUNTIME=slim` + `COMPLIANCE=soc2` + `AUTH=mtls` |
+
+### Education
+Universities, colleges, K-12 boards, EdTech platforms.
+
+Regulations: FIPPA (student data), AODA (accessibility — Ontario), WCAG 2.1 AA.
+
+| What you're building | Variant combination |
+|---|---|
+| Student information system | `RUNTIME=standard` + `COMPLIANCE=pipeda` + `AUTH=oidc` |
+| EdTech platform | `RUNTIME=slim` + `COMPLIANCE=soc2` + `AUTH=jwt` |
+
+### All Other Verticals
+
+| Vertical | Compliance arg | Runtime arg |
+|---|---|---|
+| Manufacturing / Industrial IoT | `soc2` | `slim` |
+| Media and Entertainment | `standard` | `standard` |
+| Transportation and Logistics | `soc2` | `slim` |
+| Real Estate (FINTRAC applies) | `pci` | `slim` |
+| Agriculture / AgriTech | `standard` | `standard` |
+| Legal and Professional Services | `pipeda` | `slim` |
+| Non-profit and Social | `standard` | `standard` |
+
+---
+
+## Registry Image Tag Convention
+
+One tag encodes the full variant for traceability.
+
+```
+<registry>/<service-name>:<compliance>-<runtime>-<semver>
+
+Examples:
+  ghcr.io/yarova-ca/14-express:standard-slim-1.0.0
+  ghcr.io/yarova-ca/17-spring-boot:fips-ubi9-1.0.0
+  ghcr.io/yarova-ca/15-fastapi:pci-chainguard-2.3.1
+```
+
+Compliance determines the registry:
+
+| Compliance | Push target |
+|---|---|
+| `standard`, `soc2`, `pci` | `ghcr.io/yarova-ca` (public) |
+| `fips`, `hipaa`, `cmmc` | Internal registry only — no public push |
+| `nerc`, CMMC Level 3 | Air-gapped registry — no internet access during push |
+
+---
+
+## Service Catalog — All 105 Services
+
+**Column definitions:**
+
+- **Pkg Mgr** — package manager used in the Dockerfile today
+- **Port** — the `EXPOSE` port in the Dockerfile
+- **Docker** — `Y` = Dockerfile with `--target runtime` stage exists. `N/A` = no Dockerfile.
+- **Build** — `PASS` = `docker build --target runtime` completed without errors. `N/A` = no Dockerfile.
+- **/health** — `Y` = `GET /health` route defined in source. `N` = route not present. `N/A` = no server.
+- **/live** — `Y` = `GET /health/live` route defined in source. `N` = not present. `N/A` = no server.
+- **/ready** — `Y` = `GET /health/ready` route defined in source. `N` = not present. `N/A` = no server.
+- **Tests** — `Y` = test files exist in the service directory. `N` = no test files found.
+
+---
+
+### Group 01 — SSR / Full-stack
+
+Each service runs a Node.js server that renders HTML on the server per request.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 01-angular-ssr | Angular SSR | npm | 4000 | Y | PASS | Y | Y | Y | Y |
+| 01-nextjs | Next.js | npm | 3000 | Y | PASS | N | N | N | Y |
+| 01-nuxt | Nuxt | npm | 3000 | Y | PASS | N | N | N | Y |
+| 01-remix | Remix | npm | 3000 | Y | PASS | N | N | N | Y |
+| 01-solid-start | Solid Start | npm | 3000 | Y | pending | Y | Y | Y | N |
+| 01-sveltekit | SvelteKit | npm | 3000 | Y | PASS | N | N | N | Y |
+
+---
+
+### Group 02 — Frontend SPA
+
+Build output is static HTML/JS/CSS. Runtime is nginx serving those files. No Node.js in the container.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 02-angular | Angular | npm | 80 | Y | PASS | N | N | N | Y |
+| 02-lit | Lit | npm | 80 | Y | pending | N | N | N | N |
+| 02-preact | Preact | npm | 80 | Y | pending | N | N | N | N |
+| 02-react | React | npm | 80 | Y | PASS | N | N | N | Y |
+| 02-solidjs | SolidJS | npm | 80 | Y | PASS | N | N | N | Y |
+| 02-svelte | Svelte | npm | 80 | Y | PASS | N | N | N | Y |
+| 02-vue | Vue | npm | 80 | Y | PASS | N | N | N | Y |
+
+---
+
+### Group 03 — Static Site Generators
+
+Build output is pre-rendered HTML. Runtime is nginx. Hugo uses a Go binary for the build — no npm.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 03-astro | Astro | npm | 80 | Y | PASS | N | N | N | Y |
+| 03-eleventy | Eleventy | npm | 80 | Y | PASS | N | N | N | Y |
+| 03-gatsby | Gatsby | npm | 80 | Y | PASS | N | N | N | Y |
+| 03-hugo | Hugo | — | 80 | Y | PASS | N | N | N | N |
+
+---
+
+### Group 04 — Island Architecture
+
+Island architecture: only interactive components hydrate in the browser. Rest is static HTML.
+
+Fresh uses Deno natively — no npm.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 04-astro | Astro Islands | npm | 3000 | Y | PASS | N | N | N | Y |
+| 04-fresh | Fresh | deno | 8000 | Y | PASS | N | N | N | Y |
+
+---
+
+### Group 05 — Resumability
+
+Resumability: the server serializes component state to HTML. The browser resumes without re-running JavaScript.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 05-qwik | Qwik | npm | 3000 | Y | PASS | N | N | N | Y |
+
+---
+
+### Group 06 — Edge Runtime (CI-only, no Docker)
+
+Cloudflare Workers: code runs at the network edge, not in a container.
+
+Build command: `wrangler deploy` — not `docker build`.
+
+No health endpoints — Workers respond to HTTP requests directly.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 06-hono-edge | Hono / Workers | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| 06-nextjs-edge | Next.js Edge | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| 06-remix-cloudflare | Remix / Workers | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
+
+---
+
+### Group 07 — Modern Routing Patterns
+
+Same frameworks as group 01 but demonstrating specific routing features: App Router (Next.js), file-based routing (Remix/SvelteKit).
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 07-nextjs-app-router | Next.js App Router | npm | 3000 | Y | PASS | N | N | N | Y |
+| 07-remix | Remix | npm | 3000 | Y | PASS | N | N | N | Y |
+| 07-sveltekit | SvelteKit | npm | 3000 | Y | PASS | N | N | N | Y |
+
+---
+
+### Group 08 — Module Federation
+
+Module federation: multiple independently deployed frontend apps share components at runtime.
+
+Runtime is nginx serving the shell app or remote entry.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 08-mf-rspack | Rspack MF | npm | 80 | Y | PASS | N | N | N | Y |
+| 08-mf-webpack | Webpack 5 MF | npm | 80 | Y | PASS | N | N | N | Y |
+| 08-single-spa | single-spa | npm | 80 | Y | PASS | N | N | N | Y |
+
+---
+
+### Group 09 — Mobile / React Native (CI-only, no Docker)
+
+Build via EAS (Expo Application Services) or Metro bundler. Output is a mobile app binary, not a container.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 09-expo | Expo | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| 09-ionic | Ionic | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| 09-react-native | React Native | npm | N/A | N/A | N/A | N/A | N/A | N/A | N |
+
+---
+
+### Group 10 — Cross-platform Mobile (CI-only, no Docker)
+
+Build via `flutter build`, `dotnet build`, or Gradle. Output is a mobile app binary, not a container.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 10-dotnet-maui | .NET MAUI | dotnet | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| 10-flutter | Flutter | flutter | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| 10-kmp | Kotlin Multiplatform | gradle | N/A | N/A | N/A | N/A | N/A | N/A | N |
+
+---
+
+### Group 11 — Native iOS (CI-only, macOS runner required)
+
+Build via Xcode. Requires a macOS CI runner. No Linux Docker build possible.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 11-objc-uikit | Obj-C UIKit | xcodebuild | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| 11-swift-swiftui | Swift SwiftUI | xcodebuild | N/A | N/A | N/A | N/A | N/A | N/A | N |
+
+---
+
+### Group 12 — Native Android (CI-only, no Docker)
+
+Build via Gradle on a JVM runner. Output is an APK or AAB file, not a container.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 12-java-android | Java Android | gradle | N/A | N/A | N/A | N/A | N/A | N/A | N |
+| 12-kotlin-jetpack | Kotlin Jetpack | gradle | N/A | N/A | N/A | N/A | N/A | N/A | N |
+
+---
+
+### Group 13 — Progressive Web Apps (nginx, static)
+
+PWA (Progressive Web App): a web app installable on mobile with offline capability via a service worker.
+
+Build output is static files. Runtime is nginx.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 13-vite-pwa | Vite PWA | npm | 80 | Y | PASS | N | N | N | Y |
+| 13-workbox | Workbox | npm | 80 | Y | PASS | N | N | N | Y |
+
+---
+
+### Group 14 — JavaScript / TypeScript Servers
+
+Deno uses its own dependency system (no npm needed). Elysia is Bun-native.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 14-bun | Bun native | bun | 3000 | Y | pending | Y | Y | Y | Y |
+| 14-deno | Oak (Deno) | deno | 8000 | Y | PASS | Y | Y | Y | Y |
+| 14-elysia | Elysia | bun | 3000 | Y | PASS | Y | Y | Y | Y |
+| 14-express | Express.js | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| 14-fastify | Fastify | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| 14-hono | Hono | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+| 14-nestjs | NestJS | npm | 3000 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 15 — Python Servers
+
+All Python services use pip with `requirements.txt`. Runtime uses gunicorn (WSGI) or uvicorn (ASGI).
+
+WSGI: Python standard for synchronous web servers. ASGI: Python standard for async web servers.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 15-django | Django | pip | 8080 | Y | PASS | Y | Y | Y | Y |
+| 15-fastapi | FastAPI | pip | 8080 | Y | PASS | Y | Y | Y | Y |
+| 15-flask | Flask | pip | 8080 | Y | PASS | Y | Y | Y | Y |
+| 15-starlette | Starlette | pip | 8080 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 16 — Go Servers
+
+Go modules (go mod) manages dependencies. Single static binary in the runtime image.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 16-chi | chi | go mod | 8080 | Y | PASS | Y | Y | Y | Y |
+| 16-echo | Echo | go mod | 8080 | Y | PASS | Y | Y | Y | Y |
+| 16-fiber | Fiber | go mod | 8080 | Y | PASS | Y | Y | Y | Y |
+| 16-gin | Gin | go mod | 8080 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 17 — Java Servers
+
+All three use Maven for builds. All output a fat JAR (single runnable file including all dependencies).
+
+Fat JAR: a single `.jar` file that includes the application and all its dependencies.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 17-micronaut | Micronaut | Maven | 8080 | Y | PASS | Y | Y | Y | Y |
+| 17-quarkus | Quarkus | Maven | 8080 | Y | PASS | Y | Y | Y | Y |
+| 17-spring-boot | Spring Boot | Maven | 8080 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 18 — Kotlin Servers
+
+Both use Gradle. Ktor uses Exposed ORM. Spring Boot Kotlin is Spring Boot with Kotlin syntax.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 18-ktor | Ktor | Gradle | 8080 | Y | PASS | Y | Y | Y | Y |
+| 18-spring-boot-kotlin | Spring Boot | Gradle | 8080 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 19 — .NET / C# Servers
+
+`dotnet publish` produces a self-contained binary. Port 8080 is set via `PORT` environment variable.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 19-aspnet-core | ASP.NET Core MVC | dotnet | 8080 | Y | PASS | Y | Y | Y | Y |
+| 19-minimal-apis | ASP.NET Minimal APIs | dotnet | 8080 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 20 — Rust Servers
+
+Tests are inline `#[cfg(test)]` modules inside `src/main.rs` — no separate test files.
+
+Cargo builds a single static binary. Runtime image requires no runtime dependencies.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 20-actix-web | Actix-web | cargo | 8080 | Y | PASS | Y | Y | Y | Y |
+| 20-axum | Axum | cargo | 8080 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 21 — Elixir Servers
+
+Mix is Elixir's build tool and dependency manager. Phoenix is Elixir's main web framework.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 21-phoenix | Phoenix | mix | 4000 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 22 — Ruby Servers
+
+Bundler manages Ruby gems (libraries). Bun handles JavaScript asset compilation (CSS/JS bundling).
+
+Why bun for Ruby: Rails and Sinatra use Propshaft for asset pipeline — bun is the JS bundler it calls.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 22-rails | Ruby on Rails | bundler + bun | 3000 | Y | PASS | Y | Y | Y | Y |
+| 22-sinatra | Sinatra | bundler + bun | 3000 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 23 — PHP Servers
+
+PHP-FPM (FastCGI Process Manager): PHP runtime that handles requests behind nginx.
+
+Port 9000 = PHP-FPM socket port. nginx listens on 80/8080 and proxies to PHP-FPM on 9000.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 23-laravel | Laravel | composer | 9000 | Y | PASS | Y | Y | Y | Y |
+| 23-slim | Slim | composer | 9000 | Y | PASS | Y | Y | Y | Y |
+| 23-symfony | Symfony | composer | 9000 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 24 — Swift Servers
+
+SPM (Swift Package Manager): built into the Swift toolchain — no separate install required.
+
+24-hummingbird has a placeholder test file only — no real tests yet.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 24-hummingbird | Hummingbird | SPM | 8080 | Y | PASS | Y | Y | Y | N |
+| 24-vapor | Vapor | SPM | 8080 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 25 — Scala Servers
+
+sbt (Scala Build Tool): manages dependencies and builds, similar to Maven or Gradle.
+
+Play Framework defaults to port 9000. http4s defaults to port 8080.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 25-http4s | http4s | sbt | 8080 | Y | PASS | Y | Y | Y | Y |
+| 25-play | Play Framework | sbt | 9000 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 26 — Clojure Servers
+
+Leiningen (lein): Clojure's primary build tool and dependency manager.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 26-pedestal | Pedestal | lein | 8080 | Y | PASS | Y | Y | Y | Y |
+| 26-ring | Ring | lein | 8080 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 27 — C++ Servers
+
+CMake: build system generator — produces Makefiles or Ninja build files.
+
+Tests use GoogleTest (GTest) — built alongside the main binary via CMake.
+
+| Service | Framework | Pkg Mgr | Port | Docker | Build | /health | /live | /ready | Tests |
+|---|---|---|---|---|---|---|---|---|---|
+| 27-crow | Crow | cmake | 8080 | Y | PASS | Y | Y | Y | Y |
+| 27-drogon | Drogon | cmake | 8080 | Y | PASS | Y | Y | Y | Y |
+
+---
+
+### Group 28 — gRPC Servers
+
+gRPC: Google Remote Procedure Call — binary protocol over HTTP/2 using Protocol Buffers.
+
+Port 50051: the conventional gRPC port.
+
+Port 8080: HTTP sidecar for Kubernetes liveness/readiness probes (gRPC is not HTTP/1.1).
+
+Health check for gRPC: `grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check`
+
+| Service | Library / SDK | Pkg Mgr | gRPC port | HTTP port | Docker | Tests |
+|---|---|---|---|---|---|---|
+| 28-go-grpc | grpc-go 1.63 | go mod | 50051 | 8080 | Y | Y |
+| 28-node-grpc | @grpc/grpc-js 1.10 | npm | 50051 | 8080 | Y | N |
+| 28-python-grpc | grpcio 1.63 | pip | 50051 | 8080 | Y | Y |
+| 28-java-grpc | grpc-java 1.63 | Maven | 50051 | 8080 | Y | N |
+| 28-kotlin-grpc | grpc-kotlin 1.4 | Gradle | 50051 | N/A | Y | N |
+| 28-dotnet-grpc | grpc-dotnet 2.62 | dotnet | 50051 | 8080 | Y | N |
+| 28-rust-grpc | tonic 0.11 | cargo | 50051 | N/A | Y | N |
+| 28-ruby-grpc | grpc 1.63 | bundler | 50051 | N/A | Y | N |
+| 28-php-grpc | grpc/grpc 1.63 | composer | 50051 | 8080 | Y | N |
+| 28-swift-grpc | grpc-swift 2.0 | SPM | 50051 | N/A | Y | N |
+
+---
+
+### Group 29 — GraphQL Servers
+
+GraphQL: query language for APIs — client specifies exactly what data it needs in one POST /graphql.
+
+Introspection: disabled in production (exposes full schema to attackers — turn off via config).
+
+DataLoader: batching pattern that prevents N+1 query problems in resolvers.
+
+| Service | Library | Language | Pkg Mgr | Port | Docker | Tests |
+|---|---|---|---|---|---|---|
+| 29-apollo | Apollo Server 4.10 | TypeScript | npm | 4000 | Y | N |
+| 29-graphql-yoga | GraphQL Yoga 5.6 | TypeScript | npm | 4000 | Y | N |
+| 29-strawberry | Strawberry 0.235 | Python | pip | 8000 | Y | N |
+| 29-gqlgen | gqlgen 0.17 | Go | go mod | 8080 | Y | Y |
+| 29-spring-graphql | Spring for GraphQL 1.3 | Java | Maven | 8080 | Y | N |
+| 29-hot-chocolate | Hot Chocolate 14 | .NET C# | dotnet | 8080 | Y | N |
+| 29-graphql-ruby | graphql-ruby 2.3 | Ruby | bundler | 4567 | Y | N |
+| 29-async-graphql | async-graphql 7.0 | Rust | cargo | 8080 | Y | N |
+
+---
+
+### Group 30 — WebSocket Servers
+
+WebSocket: full-duplex TCP connection started via HTTP Upgrade — persistent, bidirectional.
+
+Horizontal scaling: WebSocket requires sticky sessions or Redis pub/sub because messages go to one pod.
+
+Health probe: Kubernetes cannot probe wss:// — use the HTTP GET /health sidecar on the same port.
+
+| Service | Library | Language | Pkg Mgr | Port | Docker | Tests |
+|---|---|---|---|---|---|---|
+| 30-ws-node | ws 8.17 | TypeScript | npm | 8080 | Y | N |
+| 30-ws-go | gorilla/websocket 1.5 | Go | go mod | 8080 | Y | Y |
+| 30-ws-python | websockets 12.0 / FastAPI | Python | pip | 8080 | Y | Y |
+| 30-ws-java | Java-WebSocket 1.5 | Java | Maven | 8080 | Y | N |
+| 30-ws-elixir | Plug.Cowboy 2.7 | Elixir | mix | 8080 | Y | N |
+| 30-ws-rust | tokio-tungstenite 0.23 / Axum | Rust | cargo | 8080 | Y | N |
+| 30-ws-dotnet | ASP.NET WebSocket middleware | C# | dotnet | 8080 | Y | N |
+| 30-ws-ruby | faye-websocket 0.11 | Ruby | bundler | 9292 | Y | N |
+
+---
+
+## Counts
+
+| Metric | Count |
+|---|---|
+| Total services | 105 |
+| Services with Docker | 92 |
+| CI-only services (no Docker) | 13 |
+| Docker builds verified PASS (groups 01–27) | 62 |
+| Docker builds pending verification (new in 01, 02, 14, 28–30) | 30 |
+| Server services with all 3 HTTP health endpoints | 64 |
+| Frontend/static services (no health endpoints) | 26 |
+| gRPC services (health via grpc.health.v1 + HTTP sidecar) | 10 |
+| Services with tests | 61 |
+| Services missing tests | 44 |
+
+Tests missing in new services (groups 28–30): all except `28-go-grpc`, `28-python-grpc`, `29-gqlgen`, `30-ws-go`, `30-ws-python`.
+
+Tests missing in original services: `03-hugo`, `06-hono-edge`, `06-nextjs-edge`, `06-remix-cloudflare`, `09-expo`, `09-ionic`, `09-react-native`, `10-dotnet-maui`, `10-flutter`, `10-kmp`, `11-objc-uikit`, `11-swift-swiftui`, `12-java-android`, `12-kotlin-jetpack`, `24-hummingbird`.
+
+---
+
+## CI Pipeline Stages — Next Phase
+
+These stages are the plan. They have not been implemented yet.
+
+| Stage | Service groups | What runs |
+|---|---|---|
+| 1 — Frontend build | 01–08, 13 | `docker build --target runtime`. nginx smoke test on `/`. |
+| 2 — HTTP server build and test | 14–27 | `docker build --target runtime`. `/health/live` probe. Run test suite. |
+| 3 — gRPC build and test | 28 | `docker build --target runtime`. `grpcurl` health check on port 50051. |
+| 4 — GraphQL build and test | 29 | `docker build --target runtime`. `POST /graphql` with `{"query":"{__typename}"}`. |
+| 5 — WebSocket build and test | 30 | `docker build --target runtime`. `wscat -c ws://localhost:PORT/ws`. |
+| 6 — Mobile CI | 09–12 | Platform-native build. No Docker. |
+| 7 — Edge deploy | 06 | `wrangler deploy`. No Docker. |
+| 8 — Registry push | All Docker services | Push all 3 variants: `standard`, `chainguard`, `ubi9`. |
+| 9 — Compliance scan | All Docker images | Trivy CVE scan per image. Fail on CRITICAL severity. |
+
+Trivy: open-source vulnerability scanner for container images.
+
+CVE (Common Vulnerabilities and Exposures): publicly known security vulnerability identifier.
