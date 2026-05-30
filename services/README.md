@@ -10,6 +10,47 @@ All Docker services pass `docker build --target runtime`.
 
 ---
 
+## Contents
+
+**Get started**
+- [Quick Start](#quick-start)
+- [What This Repo Is](#what-this-repo-is)
+- [Group Map — 30 groups explained](#group-map)
+
+**Reference**
+- [What Works Today](#what-works-today)
+- [What's Coming Next](#coming-next)
+- [Feature Axis Matrix](#axis-matrix)
+- [Composing Variants — full build command](#composing)
+- [Industry Vertical → Variant Reference](#industry-verticals)
+- [Registry Image Tag Convention](#tag-convention)
+- [Counts](#counts)
+- [CI Pipeline Stages](#ci-stages)
+
+**Jump to service group**
+
+| Group | | Group | |
+|---|---|---|---|
+| 01 SSR / Full-stack | [↓ jump](#g01) | 16 Go | [↓ jump](#g16) |
+| 02 Frontend SPA | [↓ jump](#g02) | 17 Java | [↓ jump](#g17) |
+| 03 Static Site Gen | [↓ jump](#g03) | 18 Kotlin | [↓ jump](#g18) |
+| 04 Island Arch | [↓ jump](#g04) | 19 .NET | [↓ jump](#g19) |
+| 05 Resumability | [↓ jump](#g05) | 20 Rust | [↓ jump](#g20) |
+| 06 Edge Runtime | [↓ jump](#g06) | 21 Elixir | [↓ jump](#g21) |
+| 07 Modern Routing | [↓ jump](#g07) | 22 Ruby | [↓ jump](#g22) |
+| 08 Module Federation | [↓ jump](#g08) | 23 PHP | [↓ jump](#g23) |
+| 09 Mobile / RN | [↓ jump](#g09) | 24 Swift | [↓ jump](#g24) |
+| 10 Cross-platform | [↓ jump](#g10) | 25 Scala | [↓ jump](#g25) |
+| 11 Native iOS | [↓ jump](#g11) | 26 Clojure | [↓ jump](#g26) |
+| 12 Native Android | [↓ jump](#g12) | 27 C++ | [↓ jump](#g27) |
+| 13 PWA | [↓ jump](#g13) | 28 gRPC | [↓ jump](#g28) |
+| 14 JS/TS Servers | [↓ jump](#g14) | 29 GraphQL | [↓ jump](#g29) |
+| 15 Python | [↓ jump](#g15) | 30 WebSocket | [↓ jump](#g30) |
+
+
+---
+
+<a id="quick-start"></a>
 ## Quick Start — Run Any Service in 4 Commands
 
 ```bash
@@ -32,6 +73,7 @@ Replace `3000` with the port shown in the Service Catalog below.
 
 ---
 
+<a id="what-this-repo-is"></a>
 ## What This Repo Is
 
 A catalog of starter services — one per framework and language.
@@ -52,6 +94,7 @@ Each service includes:
 
 ---
 
+<a id="group-map"></a>
 ## Group Map — What Each Number Means
 
 | Groups | Domain | Has Docker | Has server |
@@ -89,10 +132,12 @@ Each service includes:
 
 ---
 
+<a id="what-works-today"></a>
 ## What Works Today
 
 These features exist in the repo right now and are tested.
 
+<a id="docker-variants"></a>
 ### 1. Docker Runtime Variants (Works Today)
 
 Every Dockerfile contains 5 runtime base image options.
@@ -124,6 +169,7 @@ docker build \
   services/14-express
 ```
 
+<a id="health-endpoints"></a>
 ### 2. Health Endpoints (Works Today)
 
 All server services (groups 01, 04, 05, 07, 14–27, 28–30) expose these routes.
@@ -152,6 +198,7 @@ Exception: 30-ws-java exposes HTTP health on port wsPort+1 (default 8081), not t
 
 When using frontend services with Kubernetes probes: point probes to `GET /` expecting HTTP 200.
 
+<a id="tests"></a>
 ### 3. Tests (Works Today)
 
 Test files exist in 66 of 105 services.
@@ -160,6 +207,7 @@ All missing test services are either CI-only (no Docker, no server), a placehold
 
 ---
 
+<a id="coming-next"></a>
 ## What's Coming Next (Designed — Not Yet Implemented)
 
 These features are designed and documented here.
@@ -168,6 +216,7 @@ The code changes have not been made yet.
 
 A `BUILD_ARG=value` notation shows the planned activation mechanism.
 
+<a id="pkg-manager"></a>
 ### Package Manager Swap (JS/TS services — groups 01–08, 13, 14)
 
 Today all JS/TS services use `npm`.
@@ -185,6 +234,7 @@ Exception today: `14-elysia` already uses `bun` (Elysia is a Bun-native framewor
 
 Exception today: `22-rails` and `22-sinatra` already use `bun` for JS asset compilation.
 
+<a id="build-tool"></a>
 ### Build Tool Swap (JS/TS services)
 
 Today all JS/TS services use Vite as the bundler (where applicable).
@@ -199,6 +249,7 @@ Planned: swap by setting `BUILD_TOOL` build arg.
 | `esbuild` | esbuild — Go-based bundler | Maximum build speed. Minimal config. |
 | `turbopack` | Turbopack | Next.js only. Set in `next.config.ts`, not a build arg. |
 
+<a id="compliance"></a>
 ### Compliance Preset (All server services)
 
 Today all services run with no compliance additions.
@@ -226,6 +277,7 @@ PII (Personally Identifiable Information): data that identifies a specific perso
 
 **Rule:** When `COMPLIANCE=fips` and `RUNTIME` is not `ubi9`: build fails with an error message.
 
+<a id="observability"></a>
 ### Observability Stack
 
 Planned: activate with `OBSERVABILITY` build arg.
@@ -241,6 +293,7 @@ OpenTelemetry: open standard for observability data — not tied to any vendor.
 
 OTLP (OpenTelemetry Protocol): the wire format for sending telemetry data.
 
+<a id="auth"></a>
 ### Auth Strategy
 
 Planned: activate with `AUTH` build arg.
@@ -258,6 +311,7 @@ When `AUTH=mtls`: `RUNTIME` must be `ubi9` or `chainguard`.
 
 Why: mTLS requires FIPS-grade TLS libraries. Only UBI9 and Chainguard base images include them.
 
+<a id="orm"></a>
 ### ORM / Database Layer
 
 Planned: activate with `ORM` build arg. Applies to server groups 14–27.
@@ -280,6 +334,7 @@ ORM (Object-Relational Mapper): library that maps database rows to code objects.
 
 ---
 
+<a id="axis-matrix"></a>
 ## Feature Axis Matrix
 
 Which build args apply to which service groups.
@@ -359,6 +414,7 @@ All other axes are designed but not yet implemented in service source code.
 
 ---
 
+<a id="composing"></a>
 ## Composing Variants — Full Build Command
 
 All planned axes compose in a single `docker build` call.
@@ -385,6 +441,7 @@ docker build --target runtime -t my-service:latest services/14-express
 
 ---
 
+<a id="industry-verticals"></a>
 ## Industry Vertical → Variant Reference
 
 Which variant combination to use for each industry.
@@ -511,6 +568,7 @@ Regulations: FIPPA (student data), AODA (accessibility — Ontario), WCAG 2.1 AA
 
 ---
 
+<a id="tag-convention"></a>
 ## Registry Image Tag Convention
 
 One tag encodes the full variant for traceability.
@@ -534,6 +592,7 @@ Compliance determines the registry:
 
 ---
 
+<a id="catalog"></a>
 ## Service Catalog — All 105 Services
 
 **Column definitions:**
@@ -550,6 +609,7 @@ Compliance determines the registry:
 
 ---
 
+<a id="g01"></a>
 ### Group 01 — SSR / Full-stack
 
 Each service runs a Node.js server that renders HTML on the server per request.
@@ -565,6 +625,7 @@ Each service runs a Node.js server that renders HTML on the server per request.
 
 ---
 
+<a id="g02"></a>
 ### Group 02 — Frontend SPA
 
 Build output is static HTML/JS/CSS. Runtime is nginx serving those files. No Node.js in the container.
@@ -581,6 +642,7 @@ Build output is static HTML/JS/CSS. Runtime is nginx serving those files. No Nod
 
 ---
 
+<a id="g03"></a>
 ### Group 03 — Static Site Generators
 
 Build output is pre-rendered HTML. Runtime is nginx. Hugo uses a Go binary for the build — no npm.
@@ -594,6 +656,7 @@ Build output is pre-rendered HTML. Runtime is nginx. Hugo uses a Go binary for t
 
 ---
 
+<a id="g04"></a>
 ### Group 04 — Island Architecture
 
 Island architecture: only interactive components hydrate in the browser. Rest is static HTML.
@@ -607,6 +670,7 @@ Fresh uses Deno natively — no npm.
 
 ---
 
+<a id="g05"></a>
 ### Group 05 — Resumability
 
 Resumability: the server serializes component state to HTML. The browser resumes without re-running JavaScript.
@@ -617,6 +681,7 @@ Resumability: the server serializes component state to HTML. The browser resumes
 
 ---
 
+<a id="g06"></a>
 ### Group 06 — Edge Runtime (CI-only, no Docker)
 
 Cloudflare Workers: code runs at the network edge, not in a container.
@@ -633,6 +698,7 @@ No health endpoints — Workers respond to HTTP requests directly.
 
 ---
 
+<a id="g07"></a>
 ### Group 07 — Modern Routing Patterns
 
 Same frameworks as group 01 but demonstrating specific routing features: App Router (Next.js), file-based routing (Remix/SvelteKit).
@@ -645,6 +711,7 @@ Same frameworks as group 01 but demonstrating specific routing features: App Rou
 
 ---
 
+<a id="g08"></a>
 ### Group 08 — Module Federation
 
 Module federation: multiple independently deployed frontend apps share components at runtime.
@@ -659,6 +726,7 @@ Runtime is nginx serving the shell app or remote entry.
 
 ---
 
+<a id="g09"></a>
 ### Group 09 — Mobile / React Native (CI-only, no Docker)
 
 Build via EAS (Expo Application Services) or Metro bundler. Output is a mobile app binary, not a container.
@@ -671,6 +739,7 @@ Build via EAS (Expo Application Services) or Metro bundler. Output is a mobile a
 
 ---
 
+<a id="g10"></a>
 ### Group 10 — Cross-platform Mobile (CI-only, no Docker)
 
 Build via `flutter build`, `dotnet build`, or Gradle. Output is a mobile app binary, not a container.
@@ -683,6 +752,7 @@ Build via `flutter build`, `dotnet build`, or Gradle. Output is a mobile app bin
 
 ---
 
+<a id="g11"></a>
 ### Group 11 — Native iOS (CI-only, macOS runner required)
 
 Build via Xcode. Requires a macOS CI runner. No Linux Docker build possible.
@@ -694,6 +764,7 @@ Build via Xcode. Requires a macOS CI runner. No Linux Docker build possible.
 
 ---
 
+<a id="g12"></a>
 ### Group 12 — Native Android (CI-only, no Docker)
 
 Build via Gradle on a JVM runner. Output is an APK or AAB file, not a container.
@@ -705,6 +776,7 @@ Build via Gradle on a JVM runner. Output is an APK or AAB file, not a container.
 
 ---
 
+<a id="g13"></a>
 ### Group 13 — Progressive Web Apps (nginx, static)
 
 PWA (Progressive Web App): a web app installable on mobile with offline capability via a service worker.
@@ -718,6 +790,7 @@ Build output is static files. Runtime is nginx.
 
 ---
 
+<a id="g14"></a>
 ### Group 14 — JavaScript / TypeScript Servers
 
 Deno uses its own dependency system (no npm needed). Elysia is Bun-native.
@@ -734,6 +807,7 @@ Deno uses its own dependency system (no npm needed). Elysia is Bun-native.
 
 ---
 
+<a id="g15"></a>
 ### Group 15 — Python Servers
 
 All Python services use pip with `requirements.txt`. Runtime uses gunicorn (WSGI) or uvicorn (ASGI).
@@ -749,6 +823,7 @@ WSGI: Python standard for synchronous web servers. ASGI: Python standard for asy
 
 ---
 
+<a id="g16"></a>
 ### Group 16 — Go Servers
 
 Go modules (go mod) manages dependencies. Single static binary in the runtime image.
@@ -762,6 +837,7 @@ Go modules (go mod) manages dependencies. Single static binary in the runtime im
 
 ---
 
+<a id="g17"></a>
 ### Group 17 — Java Servers
 
 All three use Maven for builds. All output a fat JAR (single runnable file including all dependencies).
@@ -776,6 +852,7 @@ Fat JAR: a single `.jar` file that includes the application and all its dependen
 
 ---
 
+<a id="g18"></a>
 ### Group 18 — Kotlin Servers
 
 Both use Gradle. Ktor uses Exposed ORM. Spring Boot Kotlin is Spring Boot with Kotlin syntax.
@@ -787,6 +864,7 @@ Both use Gradle. Ktor uses Exposed ORM. Spring Boot Kotlin is Spring Boot with K
 
 ---
 
+<a id="g19"></a>
 ### Group 19 — .NET / C# Servers
 
 `dotnet publish` produces a self-contained binary. Port 8080 is set via `PORT` environment variable.
@@ -798,6 +876,7 @@ Both use Gradle. Ktor uses Exposed ORM. Spring Boot Kotlin is Spring Boot with K
 
 ---
 
+<a id="g20"></a>
 ### Group 20 — Rust Servers
 
 Tests are inline `#[cfg(test)]` modules inside `src/main.rs` — no separate test files.
@@ -811,6 +890,7 @@ Cargo builds a single static binary. Runtime image requires no runtime dependenc
 
 ---
 
+<a id="g21"></a>
 ### Group 21 — Elixir Servers
 
 Mix is Elixir's build tool and dependency manager. Phoenix is Elixir's main web framework.
@@ -821,6 +901,7 @@ Mix is Elixir's build tool and dependency manager. Phoenix is Elixir's main web 
 
 ---
 
+<a id="g22"></a>
 ### Group 22 — Ruby Servers
 
 Bundler manages Ruby gems (libraries). Bun handles JavaScript asset compilation (CSS/JS bundling).
@@ -834,6 +915,7 @@ Why bun for Ruby: Rails and Sinatra use Propshaft for asset pipeline — bun is 
 
 ---
 
+<a id="g23"></a>
 ### Group 23 — PHP Servers
 
 PHP-FPM (FastCGI Process Manager): PHP runtime that handles requests behind nginx.
@@ -848,6 +930,7 @@ Port 9000 = PHP-FPM socket port. nginx listens on 80/8080 and proxies to PHP-FPM
 
 ---
 
+<a id="g24"></a>
 ### Group 24 — Swift Servers
 
 SPM (Swift Package Manager): built into the Swift toolchain — no separate install required.
@@ -861,6 +944,7 @@ SPM (Swift Package Manager): built into the Swift toolchain — no separate inst
 
 ---
 
+<a id="g25"></a>
 ### Group 25 — Scala Servers
 
 sbt (Scala Build Tool): manages dependencies and builds, similar to Maven or Gradle.
@@ -874,6 +958,7 @@ Play Framework defaults to port 9000. http4s defaults to port 8080.
 
 ---
 
+<a id="g26"></a>
 ### Group 26 — Clojure Servers
 
 Leiningen (lein): Clojure's primary build tool and dependency manager.
@@ -885,6 +970,7 @@ Leiningen (lein): Clojure's primary build tool and dependency manager.
 
 ---
 
+<a id="g27"></a>
 ### Group 27 — C++ Servers
 
 CMake: build system generator — produces Makefiles or Ninja build files.
@@ -898,6 +984,7 @@ Tests use GoogleTest (GTest) — built alongside the main binary via CMake.
 
 ---
 
+<a id="g28"></a>
 ### Group 28 — gRPC Servers
 
 gRPC: Google Remote Procedure Call — binary protocol over HTTP/2 using Protocol Buffers.
@@ -923,6 +1010,7 @@ Health check for gRPC: `grpcurl -plaintext localhost:50051 grpc.health.v1.Health
 
 ---
 
+<a id="g29"></a>
 ### Group 29 — GraphQL Servers
 
 GraphQL: query language for APIs — client specifies exactly what data it needs in one POST /graphql.
@@ -944,6 +1032,7 @@ DataLoader: batching pattern that prevents N+1 query problems in resolvers.
 
 ---
 
+<a id="g30"></a>
 ### Group 30 — WebSocket Servers
 
 WebSocket: full-duplex TCP connection started via HTTP Upgrade — persistent, bidirectional.
@@ -965,6 +1054,7 @@ Health probe: Kubernetes cannot probe wss:// — use HTTP GET /health on the sam
 
 ---
 
+<a id="counts"></a>
 ## Counts
 
 | Metric | Count |
@@ -984,6 +1074,7 @@ Tests missing in original services: `03-hugo`, `06-hono-edge`, `06-nextjs-edge`,
 
 ---
 
+<a id="ci-stages"></a>
 ## CI Pipeline Stages — Next Phase
 
 These stages are the plan. They have not been implemented yet.
