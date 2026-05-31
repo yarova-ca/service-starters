@@ -315,9 +315,15 @@ docker build --target runtime -t my-service services/14-express
 docker build --target runtime-fips -t my-service:fips services/14-express
 ```
 
-Note: `--build-arg RUNTIME=` is the planned future interface. It is not wired up yet.
+Both interfaces work:
 
-Today: use `--target` to select the runtime stage.
+```bash
+# ARG-based (new — all 28 Tier 1 Docker services)
+docker build --build-arg RUNTIME=fips -t my-service:fips services/14-express
+
+# Target-based (backward compat — still supported)
+docker build --target runtime-fips -t my-service:fips services/14-express
+```
 
 <a id="health-endpoints"></a>
 ### 2. Health Endpoints (Works Today)
@@ -450,7 +456,7 @@ Each preset adds specific middleware, headers, library swaps, and startup checks
 |---|---|---|
 | `standard` (default) | Nothing. Base service only. | Commercial, SaaS, general use |
 | `pci` | TLS enforced, PCI audit response headers, debug endpoints removed, no-plaintext-secrets startup check | Payments, retail, financial services with card data |
-| `fips` | FIPS-140-2 OpenSSL module active, non-FIPS cipher suites disabled. **Requires `RUNTIME=ubi9`.** | Federal government, defense, regulated finance |
+| `fips` | FIPS-140-2 OpenSSL module active, non-FIPS cipher suites disabled. **Requires `RUNTIME=fips`.** | Federal government, defense, regulated finance |
 | `hipaa` | PHI field masking in logs, audit trail middleware, verbose error responses disabled | Healthcare, life sciences, medical devices |
 | `cmmc` | Full audit log enforced, debug routes removed, no outbound internet at runtime, CUI data handling | Defense contractors, intelligence-adjacent work |
 | `pipeda` | Consent check middleware, data residency header (`X-Data-Residency: CA`), PII field masking in logs | Any Canadian consumer-facing service |
@@ -620,7 +626,7 @@ Reason: static sites served by nginx. No application server. No middleware entry
 
 Reason: CI-only targets. No Docker. No server. Build args have no effect.
 
-✅ RUNTIME = works today via `--target <stage-name>`. The `--build-arg RUNTIME=` interface is designed but not yet wired up.
+✅ RUNTIME = works today via both `--build-arg RUNTIME=` and `--target <stage-name>`.
 
 All other 6 axes = designed only. Not yet in service source code.
 
@@ -631,15 +637,37 @@ All other 6 axes = designed only. Not yet in service source code.
 
 **What works today:**
 
-RUNTIME is selected via `--target`. All other axes are not yet implemented.
+RUNTIME is selectable via `--build-arg RUNTIME=` for all 28 Tier 1 Docker services.
+
+All other axes are not yet implemented.
 
 ```bash
-# Today: standard runtime
+# Standard runtime (default)
 docker build --target runtime -t my-service services/14-express
 
-# Today: FIPS runtime
+# Select runtime variant
+docker build --build-arg RUNTIME=slim -t my-service services/14-express
+docker build --build-arg RUNTIME=fips -t my-service:fips services/14-express
+
+# Backward compat: --target still works
 docker build --target runtime-fips -t my-service:fips services/14-express
 ```
+
+**RUNTIME values per service group:**
+
+| Group | Default | Variants |
+|---|---|---|
+| Node.js SSR / API servers (01, 07, 14) | `alpine` | `alpine` \| `slim` \| `fips` |
+| nginx SPA / static (02, 03) | `alpine` | `alpine` \| `stable` \| `fips` |
+| Python servers (15) | `slim` | `slim` \| `alpine` \| `fips` |
+| Go servers (16, 28-go-grpc) | `scratch` | `scratch` \| `distroless` \| `alpine` \| `fips` |
+| Java / Kotlin servers (17, 18, 28-java-grpc) | `distroless` | `distroless` \| `temurin` \| `fips` |
+| .NET / C# servers (19) | `alpine` | `alpine` \| `debian` \| `fips` |
+| Rust servers (20) | `scratch` | `scratch` \| `distroless` \| `alpine` \| `fips` |
+| Elixir servers (21) | `debian` | `debian` \| `alpine` \| `fips` |
+| Ruby servers (22) | `alpine` | `alpine` \| `slim` \| `fips` |
+| PHP servers (23) | `alpine` | `alpine` \| `debian` |
+| gRPC node/python (28) | `slim` | `slim` \| `alpine` \| `fips` |
 
 **Planned interface (once all axes are implemented):**
 
@@ -647,19 +675,18 @@ All axes compose in a single `docker build` call via `--build-arg`.
 
 ```bash
 docker build \
-  --target runtime \
-  --build-arg RUNTIME=ubi9 \
+  --build-arg RUNTIME=fips \
   --build-arg PKG_MANAGER=pnpm \
   --build-arg BUILD_TOOL=vite \
   --build-arg OBSERVABILITY=otel \
   --build-arg AUTH=oidc \
   --build-arg ORM=prisma \
   --build-arg COMPLIANCE=fips \
-  -t my-service:fips-ubi9-otel-oidc \
+  -t my-service:fips-otel-oidc \
   services/14-express
 ```
 
-Note: this command does not work yet. It shows the target interface after Tier 1 implementation.
+Note: only RUNTIME works today. The other 6 axes are designed but not yet implemented.
 
 ---
 
@@ -677,9 +704,9 @@ Regulations that apply: OSFI (bank risk management), FINTRAC (anti-money launder
 
 | What you're building | Variant combination |
 |---|---|
-| Payment processing service | `RUNTIME=chainguard` + `COMPLIANCE=pci` + `AUTH=mtls` |
+| Payment processing service | `RUNTIME=alpine` *(chainguard — planned)* + `COMPLIANCE=pci` + `AUTH=mtls` |
 | Open banking API | `RUNTIME=slim` + `COMPLIANCE=pci` + `AUTH=oauth2` |
-| AML / KYC pipeline | `RUNTIME=chainguard` + `COMPLIANCE=soc2` + `AUTH=oidc` |
+| AML / KYC pipeline | `RUNTIME=alpine` *(chainguard — planned)* + `COMPLIANCE=soc2` + `AUTH=oidc` |
 | Internal tooling (no card data) | `RUNTIME=slim` + `COMPLIANCE=soc2` + `AUTH=jwt` |
 
 ### Government — Federal (Canada)
@@ -691,9 +718,9 @@ Clearance: Reliability Status minimum. Secret for ~40% of roles. Top Secret for 
 
 | What you're building | Variant combination |
 |---|---|
-| Public-facing portal | `RUNTIME=ubi9` + `COMPLIANCE=fips` + `AUTH=oidc` |
-| Internal Protected B system | `RUNTIME=ubi9` + `COMPLIANCE=fips` + `AUTH=mtls` |
-| API service (GC API guidelines) | `RUNTIME=ubi9` + `COMPLIANCE=fips` + `AUTH=oauth2` |
+| Public-facing portal | `RUNTIME=fips` + `COMPLIANCE=fips` + `AUTH=oidc` |
+| Internal Protected B system | `RUNTIME=fips` + `COMPLIANCE=fips` + `AUTH=mtls` |
+| API service (GC API guidelines) | `RUNTIME=fips` + `COMPLIANCE=fips` + `AUTH=oauth2` |
 
 ### Government — Provincial
 Ontario, BC, Alberta, Quebec provincial ministries and agencies.
@@ -703,7 +730,7 @@ Regulations: FIPPA (Freedom of Information and Protection of Privacy Act), provi
 | What you're building | Variant combination |
 |---|---|
 | Citizen-facing service | `RUNTIME=slim` + `COMPLIANCE=pipeda` + `AUTH=oidc` |
-| Internal staff system | `RUNTIME=standard` + `COMPLIANCE=pipeda` + `AUTH=jwt` |
+| Internal staff system | `RUNTIME=alpine` + `COMPLIANCE=pipeda` + `AUTH=jwt` |
 
 ### Defense and Intelligence
 DND (Department of National Defense), CSE (Communications Security Establishment), defense contractors.
@@ -712,7 +739,7 @@ Regulations: CMMC (Cybersecurity Maturity Model Certification), ITAR awareness, 
 
 | What you're building | Variant combination |
 |---|---|
-| Any defense system | `RUNTIME=ubi9` + `COMPLIANCE=cmmc` + `COMPLIANCE=fips` + `AUTH=mtls` |
+| Any defense system | `RUNTIME=fips` + `COMPLIANCE=cmmc` + `COMPLIANCE=fips` + `AUTH=mtls` |
 
 ### Healthcare and Life Sciences
 Hospitals, clinics, pharma companies, medical device makers, biotech.
@@ -721,9 +748,9 @@ Regulations: PIPEDA (personal data), PHIA (personal health information — provi
 
 | What you're building | Variant combination |
 |---|---|
-| Patient data system | `RUNTIME=chainguard` + `COMPLIANCE=hipaa` + `COMPLIANCE=pipeda` + `AUTH=oidc` |
-| Clinical trial platform | `RUNTIME=chainguard` + `COMPLIANCE=soc2` + `AUTH=oauth2` |
-| Medical device API | `RUNTIME=ubi9` + `COMPLIANCE=fips` + `AUTH=mtls` |
+| Patient data system | `RUNTIME=alpine` *(chainguard — planned)* + `COMPLIANCE=hipaa` + `COMPLIANCE=pipeda` + `AUTH=oidc` |
+| Clinical trial platform | `RUNTIME=alpine` *(chainguard — planned)* + `COMPLIANCE=soc2` + `AUTH=oauth2` |
+| Medical device API | `RUNTIME=fips` + `COMPLIANCE=fips` + `AUTH=mtls` |
 
 ### Energy and Utilities
 Oil and gas, renewable energy, power grid, water utilities.
@@ -732,7 +759,7 @@ Regulations: NERC CIP (North American Electric Reliability Corporation — Criti
 
 | What you're building | Variant combination |
 |---|---|
-| Grid-connected system | `RUNTIME=ubi9` + `COMPLIANCE=nerc` + `COMPLIANCE=fips` + `AUTH=mtls` |
+| Grid-connected system | `RUNTIME=fips` + `COMPLIANCE=nerc` + `COMPLIANCE=fips` + `AUTH=mtls` |
 | Field operations tool | `RUNTIME=slim` + `COMPLIANCE=soc2` + `AUTH=jwt` |
 
 ### Technology and SaaS
@@ -743,8 +770,8 @@ Regulations: SOC 2 Type II (security audit standard required by enterprise custo
 | What you're building | Variant combination |
 |---|---|
 | Enterprise SaaS API | `RUNTIME=slim` + `COMPLIANCE=soc2` + `AUTH=jwt` or `oauth2` |
-| AI inference service | `RUNTIME=chainguard` + `COMPLIANCE=soc2` + `AUTH=apikey` |
-| Internal developer tool | `RUNTIME=standard` + no compliance preset |
+| AI inference service | `RUNTIME=alpine` *(chainguard — planned)* + `COMPLIANCE=soc2` + `AUTH=apikey` |
+| Internal developer tool | `RUNTIME=alpine` + no compliance preset |
 
 ### Retail and Commerce
 E-commerce platforms, point-of-sale systems, payment integrations.
@@ -753,7 +780,7 @@ Regulations: PCI DSS (mandatory when storing, processing, or transmitting card d
 
 | What you're building | Variant combination |
 |---|---|
-| Checkout / payment service | `RUNTIME=chainguard` + `COMPLIANCE=pci` + `AUTH=oauth2` |
+| Checkout / payment service | `RUNTIME=alpine` *(chainguard — planned)* + `COMPLIANCE=pci` + `AUTH=oauth2` |
 | Product catalog / storefront | `RUNTIME=slim` + no compliance preset + `AUTH=jwt` |
 
 ### Telecommunications
@@ -773,7 +800,7 @@ Regulations: FIPPA (student data), AODA (accessibility — Ontario), WCAG 2.1 AA
 
 | What you're building | Variant combination |
 |---|---|
-| Student information system | `RUNTIME=standard` + `COMPLIANCE=pipeda` + `AUTH=oidc` |
+| Student information system | `RUNTIME=alpine` + `COMPLIANCE=pipeda` + `AUTH=oidc` |
 | EdTech platform | `RUNTIME=slim` + `COMPLIANCE=soc2` + `AUTH=jwt` |
 
 ### All Other Verticals

@@ -2,10 +2,11 @@
 # Framework: 23 PHP — Laravel 12
 # Pattern:   Multi-stage Docker
 # Build:     ubuntu:24.04 (PHP 8.3 + Composer)
-# Runtime:   php:8.3-fpm-alpine (php-fpm on port 9000)
-# FIPS:      N/A — no dedicated FIPS variant for PHP; use Alpine FIPS kernel
+# Runtime:   php:8.3-fpm-alpine (default) | php:8.3-fpm
 # Port:      9000 (php-fpm — pair with an nginx sidecar for HTTP port 80/443)
 # Laravel: php-fpm serves on port 9000; pair with nginx sidecar for HTTP
+# RUNTIME build-arg: alpine (default) | debian
+# Note: No FIPS variant for PHP. Uses www-data user (built into php images).
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
@@ -18,31 +19,16 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
 COPY . .
 
-# ── Runtime stage (standard — php-fpm-alpine) ─────────────────────────────
-FROM php:8.3-fpm-alpine AS runtime
+# ── Base image stages (no RUN — selection only) ───────────────────────────
+FROM php:8.3-fpm-alpine AS base-alpine
+FROM php:8.3-fpm AS base-debian
+
+# ── Runtime stage (ARG-selectable) ────────────────────────────────────────
+ARG RUNTIME=alpine
+FROM base-${RUNTIME} AS runtime
 WORKDIR /app
-RUN apk add --no-cache php83-pdo php83-pdo_mysql php83-opcache
+RUN apk add --no-cache php83-pdo php83-pdo_mysql php83-opcache 2>/dev/null || docker-php-ext-install pdo pdo_mysql opcache 2>/dev/null || true
 COPY --from=build --chown=www-data:www-data /app ./
 USER www-data
 EXPOSE 9000
 CMD ["php-fpm", "-F"]
-
-# ── Alternative runtime images ─────────────────────────────────────────────
-# Uncomment ONE block below instead of the standard runtime above.
-# Delete the standard block and all unused alternatives to keep it clean.
-
-# Option: php:8.3-fpm — Debian bullseye slim (larger, more compat, easier ext install)
-#FROM php:8.3-fpm AS runtime
-#WORKDIR /app
-#RUN docker-php-ext-install pdo pdo_mysql opcache
-#COPY --from=build --chown=www-data:www-data /app ./
-#USER www-data
-#EXPOSE 9000
-#CMD ["php-fpm", "-F"]
-
-# Option: php:8.3-cli-alpine — for CLI workers / queue consumers (not http serving)
-#FROM php:8.3-cli-alpine AS runtime
-#WORKDIR /app
-#COPY --from=build --chown=www-data:www-data /app ./
-#USER www-data
-#CMD ["php", "artisan", "queue:work"]

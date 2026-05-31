@@ -2,10 +2,10 @@
 # Framework: 20 Rust — Axum 0.8
 # Pattern:   Multi-stage Docker (musl static binary → scratch)
 # Build:     ubuntu:24.04 (rustup + musl target)
-# Runtime:   scratch (zero attack surface — no OS, no shell)
-# FIPS:      registry.access.redhat.com/ubi9/ubi-micro
+# Runtime:   scratch (default) | gcr.io/distroless/static-debian12 | alpine:3.21 | ubi9/ubi-micro
 # Port:      8080
 # Axum: statically linked via musl target; zero-dependency scratch image
+# RUNTIME build-arg: scratch (default) | distroless | alpine | fips
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
@@ -15,44 +15,38 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl build-esse
  && . /root/.cargo/env \
  && rustup target add x86_64-unknown-linux-musl \
  && rm -rf /var/lib/apt/lists/*
-ENV PATH="/root/.cargo/bin:$PATH" 
+ENV PATH="/root/.cargo/bin:$PATH"
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && echo "fn main(){}" > src/main.rs && cargo build --release --target x86_64-unknown-linux-musl && rm src/main.rs
 COPY src ./src
 RUN cargo build --release --target x86_64-unknown-linux-musl
 # REPLACE: binary name in COPY below defaults to 'app' — update to your Cargo package name
+RUN printf 'root:x:0:0:root:/root:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/false\napp:x:1001:1001::/home/app:/sbin/nologin\n' > /tmp/app-passwd \
+ && printf 'root:x:0:\nnobody:x:65534:\napp:x:1001:\n' > /tmp/app-group
 
-# ── Runtime stage (standard — scratch) ────────────────────────────────────
-FROM scratch AS runtime
+# ── Base image stages (no RUN — selection only) ───────────────────────────
+FROM scratch AS base-scratch
+FROM gcr.io/distroless/static-debian12 AS base-distroless
+FROM alpine:3.21 AS base-alpine
+FROM registry.access.redhat.com/ubi9/ubi-micro AS base-fips
+
+# ── Runtime stage (ARG-selectable) ────────────────────────────────────────
+ARG RUNTIME=scratch
+FROM base-${RUNTIME} AS runtime
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=build /tmp/app-passwd /etc/passwd
+COPY --from=build /tmp/app-group /etc/group
 COPY --from=build /app/target/x86_64-unknown-linux-musl/release/20-axum /app
-USER 65534:65534
+USER 1001
 EXPOSE 8080
 ENTRYPOINT ["/app"]
 
-# ── Alternative runtime images ─────────────────────────────────────────────
-# Uncomment ONE block below instead of the standard runtime above.
-# Delete the standard block and all unused alternatives to keep it clean.
-
-# Option: gcr.io/distroless/static-debian12 — when TLS certs or timezone data needed at runtime
-#FROM gcr.io/distroless/static-debian12 AS runtime
-#COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-#COPY --from=build /app/target/x86_64-unknown-linux-musl/release/20-axum /app
-#USER 65534:65534
-#EXPOSE 8080
-#ENTRYPOINT ["/app"]
-
-# Option: alpine:3.21 — shell available for debugging; apk available for runtime deps
-#FROM alpine:3.21 AS runtime
-#RUN apk add --no-cache ca-certificates tzdata && adduser -D -u 65534 nobody
-#COPY --from=build /app/target/x86_64-unknown-linux-musl/release/20-axum /app
-#USER 65534:65534
-#EXPOSE 8080
-#ENTRYPOINT ["/app"]
-
-# ── Runtime — FIPS (ubi-micro) ────────────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/ubi-micro AS runtime-fips
+# ── Runtime — FIPS ────────────────────────────────────────────────────────
+FROM base-fips AS runtime-fips
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=build /tmp/app-passwd /etc/passwd
+COPY --from=build /tmp/app-group /etc/group
 COPY --from=build /app/target/x86_64-unknown-linux-musl/release/20-axum /usr/local/bin/app
 USER 1001
 EXPOSE 8080

@@ -2,8 +2,8 @@
 # Framework: 14 Node/Deno/Bun — Hono 4.7
 # Pattern:   Multi-stage Docker
 # Build:     ubuntu:24.04 (Node.js 22 installed)
-# Runtime:   node:22-alpine
-# FIPS:      registry.access.redhat.com/ubi9/nodejs-22-minimal
+# Runtime:   node:22-alpine (default) | node:22-slim | ubi9/nodejs-22-minimal
+# RUNTIME build-arg: alpine (default) | slim | fips
 # Port:      3000
 # Hono on Node: entry is dist/index.js after build
 # ─────────────────────────────────────────────────────────────────────────
@@ -19,49 +19,35 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 COPY . .
 RUN npm run build
+RUN printf 'root:x:0:0:root:/root:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/false\napp:x:1001:1001::/home/app:/sbin/nologin\n' > /tmp/app-passwd \
+ && printf 'root:x:0:\nnobody:x:65534:\napp:x:1001:\n' > /tmp/app-group
 
-# ── Runtime stage (standard) ──────────────────────────────────────────────
-FROM node:22-alpine AS runtime
+# ── Runtime base images ───────────────────────────────────────────────────
+# docker build --build-arg RUNTIME=alpine|slim|fips  (default: alpine)
+FROM node:22-alpine AS base-alpine
+FROM node:22-slim AS base-slim
+FROM registry.access.redhat.com/ubi9/nodejs-22-minimal AS base-fips
+
+ARG RUNTIME=alpine
+FROM base-${RUNTIME} AS runtime
 WORKDIR /app
-RUN addgroup -S app && adduser -S app -G app
-COPY --from=build --chown=app:app /app/dist ./dist
-COPY --from=build --chown=app:app /app/node_modules ./node_modules
-COPY --from=build --chown=app:app /app/package.json ./
-USER app
+COPY --from=build /tmp/app-passwd /etc/passwd
+COPY --from=build /tmp/app-group /etc/group
+COPY --from=build --chown=1001:1001 /app/dist ./dist
+COPY --from=build --chown=1001:1001 /app/node_modules ./node_modules
+COPY --from=build --chown=1001:1001 /app/package.json ./
+USER 1001
 EXPOSE 3000
 CMD ["node", "dist/index.js"]
 
-# ── Alternative runtime images ─────────────────────────────────────────────
-# Uncomment ONE block below instead of the standard runtime above.
-# Delete the standard block and all unused alternatives to keep it clean.
-
-# Option: node:22-slim — Debian-based, glibc (better native addon compatibility than Alpine musl)
-#FROM node:22-slim AS runtime
-#WORKDIR /app
-#RUN addgroup --system app && adduser --system --ingroup app app
-#COPY --from=build --chown=app:app /app/dist ./dist
-#COPY --from=build --chown=app:app /app/node_modules ./node_modules
-#COPY --from=build --chown=app:app /app/package.json ./
-#USER app
-#EXPOSE 3000
-#CMD ["node", "dist/index.js"]
-
-# Option: cgr.dev/chainguard/node:22 — hardened, minimal, sigstore-verified supply chain
-#FROM cgr.dev/chainguard/node:22 AS runtime
-#WORKDIR /app
-#COPY --from=build --chown=65532:65532 /app/dist ./dist
-#COPY --from=build --chown=65532:65532 /app/node_modules ./node_modules
-#COPY --from=build --chown=65532:65532 /app/package.json ./
-#EXPOSE 3000
-#CMD ["node", "dist/index.js"]
-
-# ── Runtime — FIPS ────────────────────────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/nodejs-22-minimal AS runtime-fips
+# ── FIPS named stage (backward compat — also use --build-arg RUNTIME=fips) ─
+FROM base-fips AS runtime-fips
 WORKDIR /app
-RUN useradd -u 1001 -r -g 0 -s /sbin/nologin app
-COPY --from=build --chown=app:app /app/dist ./dist
-COPY --from=build --chown=app:app /app/node_modules ./node_modules
-COPY --from=build --chown=app:app /app/package.json ./
+COPY --from=build /tmp/app-passwd /etc/passwd
+COPY --from=build /tmp/app-group /etc/group
+COPY --from=build --chown=1001:1001 /app/dist ./dist
+COPY --from=build --chown=1001:1001 /app/node_modules ./node_modules
+COPY --from=build --chown=1001:1001 /app/package.json ./
 USER 1001
 EXPOSE 3000
 CMD ["node", "dist/index.js"]
