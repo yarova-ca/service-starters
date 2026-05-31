@@ -217,11 +217,33 @@ The code changes have not been made yet.
 A `BUILD_ARG=value` notation shows the planned activation mechanism.
 
 <a id="pkg-manager"></a>
-### Package Manager Swap (JS/TS services — groups 01–08, 13, 14)
+### Package Manager Swap
 
-Today all JS/TS services use `npm`.
+`PKG_MANAGER` swaps which tool installs your project's dependencies inside the Dockerfile.
 
-Planned: swap by setting `PKG_MANAGER` build arg.
+**Why JS/TS can swap:** npm, pnpm, yarn, and bun all read the same `package.json` file.
+
+The input file does not change — only which tool reads it changes.
+
+**Which languages can swap:**
+
+| Language | Group(s) | Options | Can swap? |
+|---|---|---|---|
+| JS/TS | 01–08, 13, 14 | npm · pnpm · yarn · bun | ✅ Yes — all read `package.json` |
+| Python | 15 | pip · poetry · uv | ⚠️ Possible — needs Dockerfile work (different dep files per tool) |
+| Java | 17 | Maven · Gradle | ⚠️ Possible — needs Dockerfile work |
+| Kotlin | 18 | Gradle · Maven | ⚠️ Possible — needs Dockerfile work |
+| Scala | 25 | sbt · mill · Gradle | ⚠️ Possible — needs Dockerfile work |
+| Clojure | 26 | Leiningen · deps.edn | ⚠️ Possible — needs Dockerfile work |
+| Go | 16 | go mod only | ❌ No — one option, nothing to swap |
+| Rust | 20 | Cargo only | ❌ No — one option |
+| PHP | 23 | Composer only | ❌ No — one option |
+| Ruby | 22 | Bundler only | ❌ No — one option |
+| Elixir | 21 | Mix only | ❌ No — one option |
+| Swift | 24 | SPM only | ❌ No — one option |
+| C# | 19 | NuGet only | ❌ No — one option |
+
+**Current values (JS/TS only — designed):**
 
 | `PKG_MANAGER=` | Tool | Lock file | Install command |
 |---|---|---|---|
@@ -235,7 +257,23 @@ Exception today: `14-elysia` already uses `bun` (Elysia is a Bun-native framewor
 Exception today: `22-rails` and `22-sinatra` already use `bun` for JS asset compilation.
 
 <a id="build-tool"></a>
-### Build Tool Swap (JS/TS services)
+### Build Tool Swap
+
+`BUILD_TOOL` swaps which bundler combines your JS/TS source files for deployment.
+
+**Applies to JS/TS groups only (01–08, 13, 14). Does not apply to any other language.**
+
+Why: bundling exists because JS/TS code runs in browsers.
+
+A browser loads files over the internet — 500 separate file requests is too slow.
+
+A bundler combines those 500 files into 2–3 optimized files before deployment.
+
+Go, Python, Java, Rust, Ruby, PHP, Elixir, Swift, C# run on servers.
+
+They compile to one binary or run source files directly — no separate files to bundle.
+
+The bundling concept does not exist for these languages.
 
 Today all JS/TS services use Vite as the bundler (where applicable).
 
