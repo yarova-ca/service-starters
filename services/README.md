@@ -140,88 +140,115 @@ Each service includes:
 
 This table shows which to prioritize and why.
 
-### Tier 1 — Must maintain (30 services)
+### Tier 1 — Must maintain (34 services)
 
-| Service | Why |
-|---|---|
-| `01-nextjs` | Largest SSR framework. React ecosystem standard. |
-| `01-nuxt` | Largest Vue SSR framework. |
-| `01-sveltekit` | Svelte's only fullstack option. Fast-growing. |
-| `02-react` | Most used JS framework on the planet. |
-| `02-vue` | 2nd most used. Large enterprise base. |
-| `02-angular` | Enterprise standard. Google-backed. |
-| `02-svelte` | Fastest growing. Unique compiler-based approach. |
-| `03-astro` | Most popular modern static site generator. |
-| `03-hugo` | Fastest SSG. Large content and docs user base. |
-| `06-hono-edge` | Most popular Cloudflare Workers framework. |
-| `07-nextjs-app-router` | This IS Next.js now. React Server Components. |
-| `09-react-native` | Most popular cross-platform mobile. |
-| `09-expo` | Standard way to ship React Native today. |
-| `10-flutter` | Google-backed. Most popular cross-platform mobile after RN. |
-| `11-swift-swiftui` | iOS native standard. No alternative. |
-| `12-kotlin-jetpack` | Android native standard. No alternative. |
-| `14-express` | Most used Node.js framework. |
-| `14-fastify` | Fastest Node.js. Growing fast. |
-| `14-nestjs` | Enterprise Node.js standard. |
-| `14-hono` | Modern edge-first. Very popular. |
-| `15-fastapi` | Most popular modern Python API. |
-| `15-django` | Largest Python framework overall. |
-| `16-gin` | Most popular Go framework. |
-| `17-spring-boot` | Dominates Java enterprise globally. |
-| `18-ktor` | Kotlin's primary server framework. |
-| `19-aspnet-core` | .NET standard. Microsoft-backed. |
-| `20-axum` | Most popular Rust web framework today. |
-| `21-phoenix` | Only Elixir framework worth covering. |
-| `22-rails` | Still widely used. Large existing codebase. |
-| `23-laravel` | Most popular PHP framework by far. |
-
-### Tier 2 — Keep if capacity allows (~15 services)
-
-| Service | Why lower priority |
-|---|---|
-| `01-remix` | Declining vs Next.js |
-| `02-solidjs` | Small but technically excellent |
-| `14-elysia` | Bun-native, growing |
-| `14-bun` | New runtime, growing fast |
-| `15-flask` | Simpler Python — partial overlap with FastAPI |
-| `16-echo` | 2nd Go framework — minor variation from Gin |
-| `16-fiber` | Performance-focused Go — niche use case |
-| `17-quarkus` | Cloud-native Java — growing but smaller than Spring |
-| `18-spring-boot-kotlin` | Spring + Kotlin — overlaps with 17 and 18 |
-| `19-minimal-apis` | Modern .NET — overlaps with aspnet-core |
-| `20-actix-web` | Historically popular Rust — axum replacing it |
-| `24-vapor` | Only Swift server option |
-| `08-mf-webpack` | Module Federation — enterprise micro-frontend pattern |
-| `13-vite-pwa` | PWA — still relevant for offline apps |
-| `28-go-grpc, 28-python-grpc, 28-node-grpc` | gRPC for top 3 languages |
-
-### Skip — Legacy, niche, or redundant (~35 services)
-
-| Group | Services | Why |
+| Service | Category | Why |
 |---|---|---|
-| 02 | preact, lit | Niche — minimal communities |
-| 03 | gatsby, eleventy | Gatsby declining. Eleventy niche. |
-| 04 | fresh | Deno Fresh — very small community |
-| 05 | qwik | Tiny community |
-| 06 | remix-cloudflare | Redundant with hono-edge |
-| 08 | mf-rspack, single-spa | Niche patterns |
-| 09–10 | ionic, dotnet-maui, kmp | Small communities |
-| 11 | objc-uikit | Legacy — Obj-C is dead for new projects |
-| 12 | java-android | Legacy — Kotlin replaced Java on Android |
-| 13 | workbox | Library, not a framework |
-| 14 | deno | Limited adoption outside Cloudflare |
-| 15 | starlette | FastAPI is built on it — redundant |
-| 16 | chi | Minimal Go router — too basic to template |
-| 17 | micronaut | Small community vs Spring/Quarkus |
-| 22 | sinatra | Niche minimal Ruby |
-| 23 | slim, symfony | Laravel covers PHP |
-| 24 | hummingbird | Tiny community |
-| 25 | play, http4s | Scala niche overall |
-| 26 | pedestal, ring | Clojure niche overall |
-| 27 | crow, drogon | C++ server — very niche |
-| 28 | remaining 7 gRPC variants | Lower priority languages |
-| 29 | most GraphQL variants | Keep apollo + gqlgen + spring-graphql only |
-| 30 | most WebSocket variants | Keep node + go + python only |
+| `01-nextjs` | SSR / Full-stack | Largest SSR framework. React ecosystem standard. |
+| `01-nuxt` | SSR / Full-stack | Largest Vue SSR framework. |
+| `01-sveltekit` | SSR / Full-stack | Svelte's only fullstack option. Fast-growing. |
+| `02-react` | Frontend SPA | Most used JS framework on the planet. |
+| `02-vue` | Frontend SPA | 2nd most used. Large enterprise base. |
+| `02-angular` | Frontend SPA | Enterprise standard. Google-backed. |
+| `02-svelte` | Frontend SPA | Fastest growing. Unique compiler-based approach. |
+| `03-astro` | Static Site Generator | Most popular modern static site generator. |
+| `03-hugo` | Static Site Generator | Fastest SSG. Large content and docs user base. |
+| `06-hono-edge` | Edge / Cloudflare Workers | Most popular Cloudflare Workers framework. |
+| `07-nextjs-app-router` | Modern Routing / Server Components | This IS Next.js now. React Server Components. |
+| `09-react-native` | Mobile / React Native | Most popular cross-platform mobile. |
+| `09-expo` | Mobile / React Native | Standard way to ship React Native today. |
+| `10-flutter` | Cross-platform Mobile | Google-backed. Most popular after React Native. |
+| `11-swift-swiftui` | Native iOS | iOS native standard. No alternative. |
+| `12-kotlin-jetpack` | Native Android | Android native standard. No alternative. |
+| `14-express` | JS/TS Servers | Most used Node.js framework. |
+| `14-fastify` | JS/TS Servers | Fastest Node.js. Growing fast. |
+| `14-nestjs` | JS/TS Servers | Enterprise Node.js standard. |
+| `14-hono` | JS/TS Servers | Modern edge-first. Very popular. |
+| `15-fastapi` | Python Servers | Most popular modern Python API. |
+| `15-django` | Python Servers | Largest Python framework overall. |
+| `16-gin` | Go Servers | Most popular Go framework. |
+| `17-spring-boot` | Java Servers | Dominates Java enterprise globally. |
+| `18-ktor` | Kotlin Servers | Kotlin's primary server framework. |
+| `19-aspnet-core` | .NET / C# Servers | .NET standard. Microsoft-backed. |
+| `20-axum` | Rust Servers | Most popular Rust web framework today. |
+| `21-phoenix` | Elixir Servers | Only Elixir framework worth covering. |
+| `22-rails` | Ruby Servers | Still widely used. Large existing codebase. |
+| `23-laravel` | PHP Servers | Most popular PHP framework by far. |
+| `28-go-grpc` | gRPC Servers | Go is the most common gRPC server language. |
+| `28-java-grpc` | gRPC Servers | Java microservices use gRPC heavily. |
+| `28-python-grpc` | gRPC Servers | ML/AI services expose gRPC endpoints. |
+| `28-node-grpc` | gRPC Servers | Node.js gRPC clients are very common. |
+
+### Tier 2 — Keep if capacity allows (~17 services)
+
+| Service | Category | Why lower priority |
+|---|---|---|
+| `01-remix` | SSR / Full-stack | Declining vs Next.js |
+| `02-solidjs` | Frontend SPA | Small but technically excellent |
+| `08-mf-webpack` | Module Federation | Enterprise micro-frontend pattern |
+| `13-vite-pwa` | Progressive Web Apps | Still relevant for offline apps |
+| `14-elysia` | JS/TS Servers | Bun-native, growing |
+| `14-bun` | JS/TS Servers | New runtime, growing fast |
+| `15-flask` | Python Servers | Simpler Python — partial overlap with FastAPI |
+| `16-echo` | Go Servers | 2nd Go framework — minor variation from Gin |
+| `16-fiber` | Go Servers | Performance-focused Go — niche use case |
+| `17-quarkus` | Java Servers | Cloud-native Java — growing but smaller than Spring |
+| `18-spring-boot-kotlin` | Kotlin Servers | Spring + Kotlin — overlaps with groups 17 and 18 |
+| `19-minimal-apis` | .NET / C# Servers | Modern .NET — overlaps with aspnet-core |
+| `20-actix-web` | Rust Servers | Historically popular — axum replacing it |
+| `24-vapor` | Swift Servers | Only Swift server option |
+| `28-rust-grpc` | gRPC Servers | Rust gRPC growing but smaller community |
+| `28-kotlin-grpc` | gRPC Servers | Kotlin gRPC used in JVM microservices |
+| `29-apollo` | GraphQL Servers | Most popular Node.js GraphQL server |
+
+### Skip — Legacy, niche, or redundant (~38 services)
+
+| Service | Category | Why |
+|---|---|---|
+| `02-preact` | Frontend SPA | Niche — minimal community |
+| `02-lit` | Frontend SPA | Web components — minimal community |
+| `03-gatsby` | Static Site Generator | Declining significantly |
+| `03-eleventy` | Static Site Generator | Niche — dedicated but small community |
+| `04-fresh` | Island Architecture | Deno Fresh — very small community |
+| `05-qwik` | Resumability | Tiny community |
+| `06-remix-cloudflare` | Edge / Cloudflare Workers | Redundant with hono-edge |
+| `08-mf-rspack` | Module Federation | Niche — newer Rspack variant |
+| `08-single-spa` | Module Federation | Declining micro-frontend approach |
+| `09-ionic` | Mobile / React Native | Declining vs React Native and Flutter |
+| `10-dotnet-maui` | Cross-platform Mobile | Small community |
+| `10-kmp` | Cross-platform Mobile | Kotlin Multiplatform — still maturing |
+| `11-objc-uikit` | Native iOS | Legacy — Obj-C dead for new projects |
+| `12-java-android` | Native Android | Legacy — Kotlin replaced Java on Android |
+| `13-workbox` | Progressive Web Apps | Library, not a framework |
+| `14-deno` | JS/TS Servers | Limited adoption outside Cloudflare |
+| `15-starlette` | Python Servers | FastAPI is built on it — redundant |
+| `16-chi` | Go Servers | Minimal router — too basic to template |
+| `17-micronaut` | Java Servers | Small community vs Spring and Quarkus |
+| `22-sinatra` | Ruby Servers | Niche minimal Ruby |
+| `23-slim` | PHP Servers | Laravel covers PHP |
+| `23-symfony` | PHP Servers | Laravel covers PHP |
+| `24-hummingbird` | Swift Servers | Tiny community |
+| `25-play` | Scala Servers | Scala niche overall |
+| `25-http4s` | Scala Servers | Scala niche overall |
+| `26-pedestal` | Clojure Servers | Clojure niche overall |
+| `26-ring` | Clojure Servers | Clojure niche overall |
+| `27-crow` | C++ Servers | C++ server — very niche |
+| `27-drogon` | C++ Servers | C++ server — very niche |
+| `28-dotnet-grpc` | gRPC Servers | Lower priority language for gRPC |
+| `28-php-grpc` | gRPC Servers | Lower priority language for gRPC |
+| `28-ruby-grpc` | gRPC Servers | Lower priority language for gRPC |
+| `28-swift-grpc` | gRPC Servers | Lower priority language for gRPC |
+| `29-graphql-yoga` | GraphQL Servers | Overlaps with Apollo |
+| `29-gqlgen` | GraphQL Servers | Keep only if Go GraphQL is needed |
+| `29-spring-graphql` | GraphQL Servers | Keep only if Java GraphQL is needed |
+| `29-async-graphql` | GraphQL Servers | Rust GraphQL — very niche |
+| `29-graphql-ruby` | GraphQL Servers | Ruby GraphQL — small use case |
+| `29-hot-chocolate` | GraphQL Servers | .NET GraphQL — niche |
+| `29-strawberry` | GraphQL Servers | Python GraphQL — overlaps with FastAPI |
+| `30-ws-dotnet` | WebSocket Servers | Lower priority language for WebSocket |
+| `30-ws-elixir` | WebSocket Servers | Phoenix already covers Elixir real-time |
+| `30-ws-java` | WebSocket Servers | Spring WebSocket covers this |
+| `30-ws-ruby` | WebSocket Servers | ActionCable in Rails covers this |
 
 ---
 
