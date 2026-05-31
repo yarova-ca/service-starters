@@ -2,10 +2,10 @@
 # Framework: 15 Python — FastAPI 0.115
 # Pattern:   Multi-stage Docker
 # Build:     ubuntu:24.04 (Python 3.12 + venv)
-# Runtime:   python:3.12-slim
-# FIPS:      registry.access.redhat.com/ubi9/python-39
+# Runtime:   python:3.12-slim (default) | python:3.12-alpine | ubi9/python-39
 # Port:      8080
 # FastAPI: REPLACE main:app with your module:app (e.g. app.main:app)
+# RUNTIME build-arg: slim (default) | alpine | fips
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
@@ -17,48 +17,34 @@ COPY requirements.txt ./
 RUN python3 -m venv /venv \
  && /venv/bin/pip install --no-cache-dir --upgrade pip \
  && /venv/bin/pip install --no-cache-dir -r requirements.txt
+RUN printf 'root:x:0:0:root:/root:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/false\napp:x:1001:1001::/home/app:/sbin/nologin\n' > /tmp/app-passwd \
+ && printf 'root:x:0:\nnobody:x:65534:\napp:x:1001:\n' > /tmp/app-group
 
-# ── Runtime stage (standard) ──────────────────────────────────────────────
-FROM python:3.12-slim AS runtime
+# ── Base image stages (no RUN — selection only) ───────────────────────────
+FROM python:3.12-slim AS base-slim
+FROM python:3.12-alpine AS base-alpine
+FROM registry.access.redhat.com/ubi9/python-39 AS base-fips
+
+# ── Runtime stage (ARG-selectable) ────────────────────────────────────────
+ARG RUNTIME=slim
+FROM base-${RUNTIME} AS runtime
 WORKDIR /app
-RUN useradd -u 1001 -r app
-COPY --from=build --chown=1001:0 /venv /venv
-COPY --chown=1001:0 . .
+COPY --from=build /tmp/app-passwd /etc/passwd
+COPY --from=build /tmp/app-group /etc/group
+COPY --from=build --chown=1001:1001 /venv /venv
+COPY --chown=1001:1001 . .
 ENV PATH="/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 USER 1001
 EXPOSE 8080
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
 
-# ── Alternative runtime images ─────────────────────────────────────────────
-# Uncomment ONE block below instead of the standard runtime above.
-# Delete the standard block and all unused alternatives to keep it clean.
-
-# Option: python:3.12-alpine — musl-based, ~50MB smaller; some C-extension wheels may need recompile
-#FROM python:3.12-alpine AS runtime
-#WORKDIR /app
-#RUN adduser -D -u 1001 app
-#COPY --from=build --chown=1001:0 /venv /venv
-#COPY --chown=1001:0 . .
-#ENV PATH="/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-#USER 1001
-#EXPOSE 8080
-#CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
-
-# Option: cgr.dev/chainguard/python:3.12 — hardened, minimal, sigstore-verified; no pip in runtime
-#FROM cgr.dev/chainguard/python:3.12 AS runtime
-#WORKDIR /app
-#COPY --from=build --chown=65532:65532 /venv /venv
-#COPY --chown=65532:65532 . .
-#ENV PATH="/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-#EXPOSE 8080
-#CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
-
 # ── Runtime — FIPS ────────────────────────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/python-39 AS runtime-fips
+FROM base-fips AS runtime-fips
 WORKDIR /app
-USER 1001
-COPY --from=build --chown=1001:0 /venv /venv
-COPY --chown=1001:0 . .
+COPY --from=build /tmp/app-passwd /etc/passwd
+COPY --from=build /tmp/app-group /etc/group
+COPY --from=build --chown=1001:1001 /venv /venv
+COPY --chown=1001:1001 . .
 ENV PATH="/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 USER 1001
 EXPOSE 8080

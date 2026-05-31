@@ -2,10 +2,10 @@
 # Framework: 21 Elixir/BEAM — Phoenix 1.7
 # Pattern:   Multi-stage Docker (mix release)
 # Build:     ubuntu:24.04 (Erlang + Elixir)
-# Runtime:   hexpm/elixir:1.17-erlang-27-debian-bookworm-slim
-# FIPS:      registry.access.redhat.com/ubi9/ubi-minimal
+# Runtime:   hexpm/elixir:1.17-erlang-27-debian-bookworm-slim (default) | hexpm/elixir:1.17-erlang-27-alpine-3.19 | ubi9/ubi-minimal
 # Port:      4000
 # Phoenix: mix release; REPLACE myapp with your OTP app name
+# RUNTIME build-arg: debian (default) | alpine | fips
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
@@ -21,47 +21,35 @@ COPY lib ./lib
 COPY priv ./priv
 RUN mix compile && mix release
 # REPLACE: 'myapp' in CMD below with your OTP app name (from mix.exs :app key)
+RUN printf 'root:x:0:0:root:/root:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/false\napp:x:1001:1001::/home/app:/sbin/nologin\n' > /tmp/app-passwd \
+ && printf 'root:x:0:\nnobody:x:65534:\napp:x:1001:\n' > /tmp/app-group
 
-# ── Runtime stage (standard) ──────────────────────────────────────────────
-FROM hexpm/elixir:1.17-erlang-27-debian-bookworm-slim AS runtime
+# ── Base image stages (no RUN — selection only) ───────────────────────────
+FROM hexpm/elixir:1.17-erlang-27-debian-bookworm-slim AS base-debian
+FROM hexpm/elixir:1.17-erlang-27-alpine-3.19 AS base-alpine
+FROM registry.access.redhat.com/ubi9/ubi-minimal AS base-fips
+
+# ── Runtime stage (ARG-selectable) ────────────────────────────────────────
+ARG RUNTIME=debian
+FROM base-${RUNTIME} AS runtime
 WORKDIR /app
-RUN useradd -u 1001 -r -g 0 app
-COPY --from=build --chown=1001:0 /app/_build/prod/rel/myapp ./
+COPY --from=build /tmp/app-passwd /etc/passwd
+COPY --from=build /tmp/app-group /etc/group
+COPY --from=build --chown=1001:1001 /app/_build/prod/rel/myapp ./
 # REPLACE: myapp with your OTP release name
-USER app
+USER 1001
 EXPOSE 4000
 # REPLACE: myapp with your OTP release name (from mix.exs :app key)
 CMD ["bin/app", "start"]
 
-# ── Alternative runtime images ─────────────────────────────────────────────
-# Uncomment ONE block below instead of the standard runtime above.
-# Delete the standard block and all unused alternatives to keep it clean.
-
-# Option: hexpm/elixir:1.17-erlang-27-alpine-3.19 — Alpine, smaller image (~200MB vs ~400MB)
-#FROM hexpm/elixir:1.17-erlang-27-alpine-3.19 AS runtime
-#WORKDIR /app
-#RUN adduser -D -u 1001 app
-#COPY --from=build --chown=app:app /app/_build/prod/rel/myapp ./
-#USER app
-#EXPOSE 4000
-#CMD ["bin/app", "start"]
-
-# Option: elixir:1.17-otp-27-alpine — official Elixir Alpine image
-#FROM elixir:1.17-otp-27-alpine AS runtime
-#WORKDIR /app
-#RUN adduser -D -u 1001 app
-#COPY --from=build --chown=app:app /app/_build/prod/rel/myapp ./
-#USER app
-#EXPOSE 4000
-#CMD ["bin/app", "start"]
-
-# ── Runtime — FIPS (UBI9 minimal) ────────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime-fips
+# ── Runtime — FIPS ────────────────────────────────────────────────────────
+FROM base-fips AS runtime-fips
 WORKDIR /app
-RUN useradd -u 1001 -r -g 0 app
-COPY --from=build --chown=1001:0 /app/_build/prod/rel/myapp ./
+COPY --from=build /tmp/app-passwd /etc/passwd
+COPY --from=build /tmp/app-group /etc/group
+COPY --from=build --chown=1001:1001 /app/_build/prod/rel/myapp ./
 # REPLACE: myapp with your OTP release name
-USER app
+USER 1001
 EXPOSE 4000
 # REPLACE: myapp with your OTP release name
 CMD ["bin/app", "start"]
