@@ -1,12 +1,23 @@
 # Service Starters — Developer Catalog
 
 105 production-ready service templates.
-30 language and protocol groups. Every major tech stack covered.
-Server services (groups 01, 04, 05, 07, 14–27, 29–30) expose `/health`, `/health/live`, `/health/ready`.
-Static/nginx services (groups 02, 03, 08, 13): no app-level health — nginx on port 80 = the health signal.
-gRPC services (group 28): 6 of 10 have HTTP health sidecar on port 8080. All 10 implement `grpc.health.v1.Health/Check` on port 50051.
-Note: 28-kotlin-grpc, 28-rust-grpc, 28-ruby-grpc, 28-swift-grpc have no HTTP sidecar — probe via gRPC protocol only.
-All Docker services pass `docker build --target runtime`.
+
+30 language and protocol groups.
+
+Every major tech stack covered.
+
+**Health check coverage:**
+
+| Service type | Groups | Health signal |
+|---|---|---|
+| Server services | 01, 04, 05, 07, 14–27, 29–30 | `/health`, `/health/live`, `/health/ready` on app port |
+| Static / nginx | 02, 03, 08, 13 | nginx HTTP 200 on port 80 — no app-level route |
+| gRPC | 28 | `grpc.health.v1.Health/Check` on port 50051 |
+| gRPC with HTTP sidecar | 28 (6 of 10 services) | HTTP health also on port 8080 |
+| gRPC — no HTTP sidecar | 28-kotlin-grpc, 28-rust-grpc, 28-ruby-grpc, 28-swift-grpc | gRPC protocol only — no HTTP sidecar |
+| CI-only / mobile / native | 09–12 | No Docker. No server. No health endpoint. |
+
+All 92 Docker services pass `docker build --target runtime`.
 
 ---
 
@@ -82,11 +93,16 @@ A catalog of starter services — one per framework and language.
 Each service is a complete, runnable starting point.
 
 Each service includes:
+
 - A working Dockerfile with `--target runtime` stage
 - A health endpoint at `/health`
-- A liveness probe at `/health/live` (Kubernetes restarts pod on non-200)
-- A readiness probe at `/health/ready` (Kubernetes removes pod from load balancer on non-200)
+- A liveness probe at `/health/live`
+- A readiness probe at `/health/ready`
 - Tests (where applicable)
+
+Liveness probe: when this returns non-200, Kubernetes restarts the pod.
+
+Readiness probe: when this returns non-200, Kubernetes stops sending traffic to the pod.
 
 **Who uses this:**
 - A team picking a backend language starts here, not from scratch.
@@ -260,34 +276,48 @@ These features exist in the repo right now and are tested.
 <a id="docker-variants"></a>
 ### 1. Docker Runtime Variants (Works Today)
 
-Every Dockerfile contains 5 runtime base image options.
+Every Dockerfile has multiple named runtime stages.
 
-One block is uncommented (active). The other 4 are commented out.
+Each stage uses a different base image.
 
-To switch: comment out the active block, uncomment the target block, rebuild.
-
-| Variant | Base image | When to use |
-|---|---|---|
-| `standard` | `debian:bookworm-slim` | Default. Development. General commercial workloads. |
-| `slim` | `gcr.io/distroless/base-debian12` | No shell, no package manager in runtime. Smaller attack surface. |
-| `chainguard` | `cgr.dev/chainguard/static` | Zero known CVEs. Supply-chain signed SBOM. SOC 2 Type II. |
-| `ubi9` | `registry.access.redhat.com/ubi9-minimal` | FIPS-140-2 crypto. Government and regulated workloads. |
-| `edge` | `debian:bookworm-slim` + multi-arch | Builds `linux/amd64` AND `linux/arm64` in one command. |
+To build a specific variant: pass `--target <stage-name>` to `docker build`.
 
 SBOM (Software Bill of Materials): a signed list of every dependency in the image.
 
 FIPS-140-2: US/Canadian government crypto standard — mandatory for federal systems.
 
-**To build a specific variant:**
+| Stage name | Base image | When to use |
+|---|---|---|
+| `runtime` | `node:22-alpine` or language equivalent | Default. Development. General workloads. |
+| `runtime-fips` | `registry.access.redhat.com/ubi9-minimal` equivalent | FIPS-140-2 crypto. Government and regulated workloads. |
+
+**Additional variants (uncomment in Dockerfile):**
+
+| Variant | Base image | When to use |
+|---|---|---|
+| slim | `gcr.io/distroless/base-debian12` | No shell in runtime. Smaller attack surface. |
+| chainguard | `cgr.dev/chainguard/static` | Zero known CVEs. Supply-chain signed SBOM. SOC 2 Type II. |
+| edge | `debian:bookworm-slim` multi-arch | Builds `linux/amd64` AND `linux/arm64` in one command. |
+
+These three variants are commented out in the Dockerfile.
+
+To activate: comment out the active `FROM ... AS runtime` block, uncomment the target block, rebuild.
+
+**To build the standard variant:**
 
 ```bash
-# Example: build the UBI9 FIPS variant of the Express service
-docker build \
-  --target runtime \
-  --build-arg RUNTIME=ubi9 \
-  -t my-service:ubi9 \
-  services/14-express
+docker build --target runtime -t my-service services/14-express
 ```
+
+**To build the FIPS variant:**
+
+```bash
+docker build --target runtime-fips -t my-service:fips services/14-express
+```
+
+Note: `--build-arg RUNTIME=` is the planned future interface. It is not wired up yet.
+
+Today: use `--target` to select the runtime stage.
 
 <a id="health-endpoints"></a>
 ### 2. Health Endpoints (Works Today)
@@ -501,7 +531,7 @@ Which `docker build --build-arg` axes apply to which service groups.
 
 | Axis | Column | What it does | Applies to | Status |
 |---|---|---|---|---|
-| Runtime variant | RUNTIME | Swap the base image — affects security posture and compliance eligibility | All 92 Docker services | ✅ Implemented |
+| Runtime variant | RUNTIME | Swap the base image — affects security posture and compliance eligibility | All 92 Docker services | ✅ Works today via `--target` stage name |
 | Package manager | PKG_MGR | Replace npm with pnpm / yarn / bun in the Dockerfile | JS/TS groups 01–08, 13, 14 | Designed |
 | Build tool | BUILD_TOOL | Replace Vite with webpack / rspack / esbuild as the JS/TS bundler | JS/TS groups 01–08, 13, 14 | Designed |
 | Compliance preset | COMPLIANCE | Add PCI / FIPS / HIPAA / PIPEDA middleware and startup checks | All server groups | Designed |
@@ -590,14 +620,30 @@ Reason: static sites served by nginx. No application server. No middleware entry
 
 Reason: CI-only targets. No Docker. No server. Build args have no effect.
 
-✅ RUNTIME = implemented today. All other axes = designed, not yet in service source code.
+✅ RUNTIME = works today via `--target <stage-name>`. The `--build-arg RUNTIME=` interface is designed but not yet wired up.
+
+All other 6 axes = designed only. Not yet in service source code.
 
 ---
 
 <a id="composing"></a>
 ## Composing Variants — Full Build Command
 
-All planned axes compose in a single `docker build` call.
+**What works today:**
+
+RUNTIME is selected via `--target`. All other axes are not yet implemented.
+
+```bash
+# Today: standard runtime
+docker build --target runtime -t my-service services/14-express
+
+# Today: FIPS runtime
+docker build --target runtime-fips -t my-service:fips services/14-express
+```
+
+**Planned interface (once all axes are implemented):**
+
+All axes compose in a single `docker build` call via `--build-arg`.
 
 ```bash
 docker build \
@@ -613,11 +659,7 @@ docker build \
   services/14-express
 ```
 
-Minimum build (all defaults):
-
-```bash
-docker build --target runtime -t my-service:latest services/14-express
-```
+Note: this command does not work yet. It shows the target interface after Tier 1 implementation.
 
 ---
 
