@@ -9,9 +9,17 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends maven openjdk-21-jdk \
  && rm -rf /var/lib/apt/lists/*
+
+FROM eclipse-temurin:21-jdk-jammy AS base-sdk
+FROM eclipse-temurin:21-jdk-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY pom.xml ./
 RUN mvn dependency:go-offline -B -q

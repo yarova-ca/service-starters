@@ -9,9 +9,18 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+ARG RUNTIME=distroless
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk \
  && rm -rf /var/lib/apt/lists/*
+
+FROM eclipse-temurin:21-jdk-jammy AS base-sdk
+FROM eclipse-temurin:21-jdk-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY build.gradle.kts settings.gradle.kts gradlew ./
 COPY gradle ./gradle
@@ -28,7 +37,6 @@ FROM eclipse-temurin:21-jre-alpine AS base-temurin
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime AS base-fips
 
 # ── Runtime stage (ARG-selectable) ────────────────────────────────────────
-ARG RUNTIME=distroless
 FROM base-${RUNTIME} AS runtime
 WORKDIR /app
 COPY --from=build /tmp/app-passwd /etc/passwd

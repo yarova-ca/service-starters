@@ -276,54 +276,133 @@ These features exist in the repo right now and are tested.
 <a id="docker-variants"></a>
 ### 1. Docker Runtime Variants (Works Today)
 
-Every Dockerfile has multiple named runtime stages.
+**What this does:**
 
-Each stage uses a different base image.
+Swaps the base Linux image your service runs on without editing any Dockerfile.
 
-To build a specific variant: pass `--target <stage-name>` to `docker build`.
+Base image (the OS layer every container starts from): controls security posture, image size, and compliance eligibility.
 
-SBOM (Software Bill of Materials): a signed list of every dependency in the image.
-
-FIPS-140-2: US/Canadian government crypto standard — mandatory for federal systems.
-
-| Stage name | Base image | When to use |
-|---|---|---|
-| `runtime` | `node:22-alpine` or language equivalent | Default. Development. General workloads. |
-| `runtime-fips` | `registry.access.redhat.com/ubi9-minimal` equivalent | FIPS-140-2 crypto. Government and regulated workloads. |
-
-**Additional variants (uncomment in Dockerfile):**
-
-| Variant | Base image | When to use |
-|---|---|---|
-| slim | `gcr.io/distroless/base-debian12` | No shell in runtime. Smaller attack surface. |
-| chainguard | `cgr.dev/chainguard/static` | Zero known CVEs. Supply-chain signed SBOM. SOC 2 Type II. |
-| edge | `debian:bookworm-slim` multi-arch | Builds `linux/amd64` AND `linux/arm64` in one command. |
-
-These three variants are commented out in the Dockerfile.
-
-To activate: comment out the active `FROM ... AS runtime` block, uncomment the target block, rebuild.
-
-**To build the standard variant:**
+**How to use it:**
 
 ```bash
+# Default — no arg needed
 docker build --target runtime -t my-service services/14-express
-```
 
-**To build the FIPS variant:**
-
-```bash
-docker build --target runtime-fips -t my-service:fips services/14-express
-```
-
-Both interfaces work:
-
-```bash
-# ARG-based (new — all 28 Tier 1 Docker services)
+# Select a different runtime
 docker build --build-arg RUNTIME=fips -t my-service:fips services/14-express
+docker build --build-arg RUNTIME=slim -t my-service services/14-express
 
-# Target-based (backward compat — still supported)
+# Backward compat — --target still works
 docker build --target runtime-fips -t my-service:fips services/14-express
 ```
+
+---
+
+**How it works inside the Dockerfile (3 steps):**
+
+**Step 1 — Build stage creates a minimal user file.**
+
+```dockerfile
+RUN printf 'root:x:0:0:root:/root:/bin/sh\n\
+nobody:x:65534:65534:nobody:/nonexistent:/bin/false\n\
+app:x:1001:1001::/home/app:/sbin/nologin\n' > /tmp/app-passwd
+```
+
+Why: different base images use different commands to create users (`adduser` on Alpine, `useradd` on Debian, not available at all on `scratch` or `distroless`).
+
+Creating the user file once in the build stage, then copying it into any runtime image, solves all four cases with one mechanism.
+
+**Step 2 — All three base images defined as named stages.**
+
+```dockerfile
+FROM node:22-alpine AS base-alpine
+FROM node:22-slim   AS base-slim
+FROM ubi9/nodejs-22-minimal AS base-fips
+```
+
+Docker BuildKit (modern Docker build engine) only pulls the stage that is selected.
+
+The other two are skipped entirely — no extra pull time.
+
+**Step 3 — ARG selects which base image becomes the runtime stage.**
+
+```dockerfile
+ARG RUNTIME=alpine
+FROM base-${RUNTIME} AS runtime
+COPY --from=build /tmp/app-passwd /etc/passwd
+COPY --from=build --chown=1001:1001 /app/dist ./dist
+USER 1001
+```
+
+When `RUNTIME=alpine`: `base-alpine` image is used. App runs as UID 1001.
+
+When `RUNTIME=fips`: `base-fips` (UBI9 — Red Hat FIPS-validated) image is used. App runs as UID 1001.
+
+When `RUNTIME=slim` or `RUNTIME=debian`: Debian-based slim image. App runs as UID 1001.
+
+The `/etc/passwd` copy is what makes `USER 1001` work in scratch and distroless images.
+
+Scratch (empty image, zero OS) and distroless (no shell, no package manager) have no `adduser` command.
+
+COPY creates the file directly — no command needed.
+
+---
+
+**RUNTIME values per service group:**
+
+FIPS-140-2: US/Canadian government crypto standard. Required for federal systems, defense contractors.
+
+Distroless (image with no shell and no package manager — minimal attack surface): default for Java and Kotlin.
+
+Scratch (completely empty image — contains only what you COPY into it): default for Go and Rust statically-linked binaries.
+
+| Group | Default | Other values |
+|---|---|---|
+| Node.js SSR + API (01, 07, 14) | `alpine` | `slim` · `fips` |
+| nginx static sites (02, 03) | `alpine` | `stable` · `fips` |
+| Python (15) | `slim` | `alpine` · `fips` |
+| Go servers (16) + go-grpc | `scratch` | `distroless` · `alpine` · `fips` |
+| Java (17) + java-grpc | `distroless` | `temurin` · `fips` |
+| Kotlin (18) | `distroless` | `temurin` · `fips` |
+| .NET / C# (19) | `alpine` | `debian` · `fips` |
+| Rust (20) | `scratch` | `distroless` · `alpine` · `fips` |
+| Elixir (21) | `debian` | `alpine` · `fips` |
+| Ruby (22) | `alpine` | `slim` · `fips` |
+| PHP (23) | `alpine` | `debian` |
+| gRPC node + python (28) | `slim` | `alpine` · `fips` |
+| gRPC go (28) | `slim` | `distroless` · `fips` |
+| gRPC java (28) | `temurin` | `distroless` · `fips` |
+
+PHP has no `fips` value.
+
+Why: no FIPS-validated PHP base image exists from Red Hat or any major vendor.
+
+---
+
+**Which services support `--build-arg RUNTIME=`:**
+
+All 28 Tier 1 Docker services.
+
+| Group | Services |
+|---|---|
+| Node.js SSR | `01-nextjs` · `01-nuxt` · `01-sveltekit` · `07-nextjs-app-router` |
+| Node.js API | `14-express` · `14-fastify` · `14-hono` · `14-nestjs` |
+| nginx SPA | `02-react` · `02-vue` · `02-angular` · `02-svelte` |
+| nginx static | `03-astro` · `03-hugo` |
+| Python | `15-fastapi` · `15-django` |
+| Go | `16-gin` |
+| Java | `17-spring-boot` |
+| Kotlin | `18-ktor` |
+| .NET | `19-aspnet-core` |
+| Rust | `20-axum` |
+| Elixir | `21-phoenix` |
+| Ruby | `22-rails` |
+| PHP | `23-laravel` |
+| gRPC | `28-go-grpc` · `28-java-grpc` · `28-python-grpc` · `28-node-grpc` |
+
+The remaining Tier 2 and Skip services still use the old commented-block mechanism.
+
+SBOM (Software Bill of Materials): a signed list of every dependency in the image — generated automatically by some base images like chainguard.
 
 <a id="health-endpoints"></a>
 ### 2. Health Endpoints (Works Today)

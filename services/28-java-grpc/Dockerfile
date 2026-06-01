@@ -1,5 +1,17 @@
 # syntax=docker/dockerfile:1.6
-FROM eclipse-temurin:21-jdk-bookworm AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+ARG RUNTIME=temurin
+
+FROM ubuntu:24.04 AS base-ubuntu
+RUN apt-get update && apt-get install -y --no-install-recommends maven openjdk-21-jdk \
+ && rm -rf /var/lib/apt/lists/*
+
+FROM eclipse-temurin:21-jdk-jammy AS base-sdk
+FROM eclipse-temurin:21-jdk-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B 2>/dev/null || true
@@ -8,11 +20,10 @@ RUN mvn package -DskipTests -B
 RUN printf 'root:x:0:0:root:/root:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/false\napp:x:1001:1001::/home/app:/sbin/nologin\n' > /tmp/app-passwd \
  && printf 'root:x:0:\nnobody:x:65534:\napp:x:1001:\n' > /tmp/app-group
 
-FROM eclipse-temurin:21-jre-bookworm AS base-temurin
+FROM eclipse-temurin:21-jre-jammy AS base-temurin
 FROM gcr.io/distroless/java21-debian12 AS base-distroless
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime AS base-fips
 
-ARG RUNTIME=temurin
 FROM base-${RUNTIME} AS runtime
 WORKDIR /app
 COPY --from=build /tmp/app-passwd /etc/passwd

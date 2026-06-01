@@ -9,7 +9,9 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends wget clang libicu-dev libssl-dev \
  && wget -q https://download.swift.org/swift-6.0.3-release/ubuntu2404/swift-6.0.3-RELEASE/swift-6.0.3-RELEASE-ubuntu24.04.tar.gz \
  && tar -xzf swift-6.0.3-RELEASE-ubuntu24.04.tar.gz -C /usr \
@@ -17,6 +19,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget clang libi
  && rm swift-6.0.3-RELEASE-ubuntu24.04.tar.gz \
  && rm -rf /var/lib/apt/lists/*
 ENV PATH="/usr/swift/usr/bin:$PATH" 
+
+FROM swift:6.0-bookworm AS base-sdk
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY Package.swift Package.resolved ./
 RUN swift package resolve

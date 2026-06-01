@@ -1,5 +1,17 @@
 # syntax=docker/dockerfile:1.6
-FROM python:3.12-slim-bookworm AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+ARG RUNTIME=slim
+
+FROM ubuntu:24.04 AS base-ubuntu
+RUN apt-get update && apt-get install -y --no-install-recommends python3.12 python3-pip python3-venv \
+ && rm -rf /var/lib/apt/lists/*
+
+FROM python:3.12-slim-bookworm AS base-sdk
+FROM python:3.12-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -10,7 +22,6 @@ FROM python:3.12-slim AS base-slim
 FROM python:3.12-alpine AS base-alpine
 FROM registry.access.redhat.com/ubi9/python-39 AS base-fips
 
-ARG RUNTIME=slim
 FROM base-${RUNTIME} AS runtime
 WORKDIR /app
 COPY --from=build /tmp/app-passwd /etc/passwd

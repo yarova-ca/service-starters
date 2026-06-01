@@ -9,9 +9,18 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+ARG RUNTIME=alpine
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends ruby ruby-dev build-essential \
  && rm -rf /var/lib/apt/lists/*
+
+FROM ruby:3.3-bookworm AS base-sdk
+FROM ruby:3.3-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY Gemfile Gemfile.lock ./
 RUN bundle config set without 'development test' \
@@ -26,7 +35,6 @@ FROM ruby:3.3-slim AS base-slim
 FROM registry.access.redhat.com/ubi9/ruby-32 AS base-fips
 
 # ── Runtime stage (ARG-selectable) ────────────────────────────────────────
-ARG RUNTIME=alpine
 FROM base-${RUNTIME} AS runtime
 WORKDIR /app
 COPY --from=build /tmp/app-passwd /etc/passwd
