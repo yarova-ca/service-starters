@@ -9,13 +9,22 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+ARG RUNTIME=scratch
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates \
  && wget -q https://go.dev/dl/go1.23.4.linux-amd64.tar.gz \
  && tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz \
  && rm go1.23.4.linux-amd64.tar.gz \
  && rm -rf /var/lib/apt/lists/*
 ENV PATH="/usr/local/go/bin:$PATH" CGO_ENABLED=0 GOOS=linux
+
+FROM golang:1.23-bookworm AS base-sdk
+FROM golang:1.23-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -31,7 +40,6 @@ FROM alpine:3.21 AS base-alpine
 FROM registry.access.redhat.com/ubi9/ubi-micro AS base-fips
 
 # ── Runtime stage (ARG-selectable) ────────────────────────────────────────
-ARG RUNTIME=scratch
 FROM base-${RUNTIME} AS runtime
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /tmp/app-passwd /etc/passwd

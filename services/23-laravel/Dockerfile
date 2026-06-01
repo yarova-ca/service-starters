@@ -10,10 +10,19 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+ARG RUNTIME=alpine
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends php8.3 php8.3-cli php8.3-mbstring php8.3-xml \
  && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
  && rm -rf /var/lib/apt/lists/*
+
+FROM php:8.3-cli-bookworm AS base-sdk
+FROM php:8.3-cli-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
@@ -24,7 +33,6 @@ FROM php:8.3-fpm-alpine AS base-alpine
 FROM php:8.3-fpm AS base-debian
 
 # ── Runtime stage (ARG-selectable) ────────────────────────────────────────
-ARG RUNTIME=alpine
 FROM base-${RUNTIME} AS runtime
 WORKDIR /app
 RUN apk add --no-cache php83-pdo php83-pdo_mysql php83-opcache 2>/dev/null || docker-php-ext-install pdo pdo_mysql opcache 2>/dev/null || true

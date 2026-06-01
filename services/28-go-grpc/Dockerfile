@@ -1,5 +1,21 @@
 # syntax=docker/dockerfile:1.6
-FROM golang:1.22-bookworm AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+ARG RUNTIME=slim
+
+FROM ubuntu:24.04 AS base-ubuntu
+RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates \
+ && wget -q https://go.dev/dl/go1.22.12.linux-amd64.tar.gz \
+ && tar -C /usr/local -xzf go1.22.12.linux-amd64.tar.gz \
+ && rm go1.22.12.linux-amd64.tar.gz \
+ && rm -rf /var/lib/apt/lists/*
+ENV PATH="/usr/local/go/bin:$PATH"
+
+FROM golang:1.22-bookworm AS base-sdk
+FROM golang:1.22-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY go.mod go.sum* ./
 RUN go mod download
@@ -12,7 +28,6 @@ FROM debian:bookworm-slim AS base-slim
 FROM gcr.io/distroless/base-debian12 AS base-distroless
 FROM registry.access.redhat.com/ubi9-minimal AS base-fips
 
-ARG RUNTIME=slim
 FROM base-${RUNTIME} AS runtime
 WORKDIR /app
 COPY --from=build /tmp/app-passwd /etc/passwd

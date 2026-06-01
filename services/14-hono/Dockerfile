@@ -9,11 +9,20 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+ARG RUNTIME=alpine
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
  && apt-get install -y nodejs \
  && rm -rf /var/lib/apt/lists/*
+
+FROM node:22-bookworm-slim AS base-sdk
+FROM node:22-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
@@ -28,7 +37,6 @@ FROM node:22-alpine AS base-alpine
 FROM node:22-slim AS base-slim
 FROM registry.access.redhat.com/ubi9/nodejs-22-minimal AS base-fips
 
-ARG RUNTIME=alpine
 FROM base-${RUNTIME} AS runtime
 WORKDIR /app
 COPY --from=build /tmp/app-passwd /etc/passwd

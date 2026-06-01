@@ -9,10 +9,17 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends cmake clang libssl-dev zlib1g-dev \
     libjsoncpp-dev uuid-dev libpq-dev libbrotli-dev \
  && rm -rf /var/lib/apt/lists/*
+
+FROM debian:bookworm AS base-sdk
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY CMakeLists.txt ./
 COPY src ./src

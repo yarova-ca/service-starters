@@ -9,9 +9,17 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends python3.12 python3-pip python3-venv \
  && rm -rf /var/lib/apt/lists/*
+
+FROM python:3.12-slim-bookworm AS base-sdk
+FROM python:3.12-alpine AS base-sdk-alpine
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY requirements.txt ./
 RUN python3 -m venv /venv \

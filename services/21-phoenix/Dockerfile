@@ -2,16 +2,24 @@
 # Framework: 21 Elixir/BEAM — Phoenix 1.7
 # Pattern:   Multi-stage Docker (mix release)
 # Build:     ubuntu:24.04 (Erlang + Elixir)
-# Runtime:   hexpm/elixir:1.17-erlang-27-debian-bookworm-slim (default) | hexpm/elixir:1.17-erlang-27-alpine-3.19 | ubi9/ubi-minimal
+# Runtime:   hexpm/elixir:1.17-erlang-27.3.4.12-debian-bookworm-20260518-slim (default) | hexpm/elixir:1.17-erlang-27.3.4.12-alpine-3.21.7 | ubi9/ubi-minimal
 # Port:      4000
 # Phoenix: mix release; REPLACE myapp with your OTP app name
 # RUNTIME build-arg: debian (default) | alpine | fips
 # ─────────────────────────────────────────────────────────────────────────
 
 # ── Build stage ───────────────────────────────────────────────────────────
-FROM ubuntu:24.04 AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+ARG RUNTIME=debian
+FROM ubuntu:24.04 AS base-ubuntu
 RUN apt-get update && apt-get install -y --no-install-recommends erlang elixir \
  && rm -rf /var/lib/apt/lists/*
+
+FROM hexpm/elixir:1.17-erlang-27.3.4.12-debian-bookworm-20260518-slim AS base-sdk
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 ENV MIX_ENV=prod
 COPY mix.exs mix.lock ./
@@ -25,12 +33,11 @@ RUN printf 'root:x:0:0:root:/root:/bin/sh\nnobody:x:65534:65534:nobody:/nonexist
  && printf 'root:x:0:\nnobody:x:65534:\napp:x:1001:\n' > /tmp/app-group
 
 # ── Base image stages (no RUN — selection only) ───────────────────────────
-FROM hexpm/elixir:1.17-erlang-27-debian-bookworm-slim AS base-debian
-FROM hexpm/elixir:1.17-erlang-27-alpine-3.19 AS base-alpine
+FROM hexpm/elixir:1.17-erlang-27.3.4.12-debian-bookworm-20260518-slim AS base-debian
+FROM hexpm/elixir:1.17-erlang-27.3.4.12-alpine-3.21.7 AS base-alpine
 FROM registry.access.redhat.com/ubi9/ubi-minimal AS base-fips
 
 # ── Runtime stage (ARG-selectable) ────────────────────────────────────────
-ARG RUNTIME=debian
 FROM base-${RUNTIME} AS runtime
 WORKDIR /app
 COPY --from=build /tmp/app-passwd /etc/passwd

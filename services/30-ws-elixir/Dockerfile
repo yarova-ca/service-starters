@@ -1,5 +1,15 @@
 # syntax=docker/dockerfile:1.6
-FROM elixir:1.16-otp-26-slim AS build
+ARG BUILD_IMAGE=ubuntu
+ARG BUILD_BASE=ubuntu:24.04
+
+FROM ubuntu:24.04 AS base-ubuntu
+RUN apt-get update && apt-get install -y --no-install-recommends erlang elixir \
+ && rm -rf /var/lib/apt/lists/*
+
+FROM hexpm/elixir:1.17-erlang-27.3.4.12-debian-bookworm-20260518-slim AS base-sdk
+FROM ${BUILD_BASE} AS base-custom
+
+FROM base-${BUILD_IMAGE} AS build
 WORKDIR /app
 COPY mix.exs mix.lock* ./
 RUN mix local.hex --force && mix local.rebar --force
